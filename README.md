@@ -65,3 +65,9 @@ Hotfix started as a practical solution to a real kitchen workflow problem: paper
 ## Status
 
 Portfolio snapshot based on the working V12.7 codebase with the master-order workflow, Save Draft / Confirm Order, Keyline authority model, stock transfers, receiving and reporting features.
+
+## Access control
+
+New users cannot create accounts through the public sign-up option. Access is restricted to approved team members who are invited or provisioned by an administrator.
+
+Supabase Auth enforces this restriction server-side, so the live link cannot be used for self-service registration. The sign-up control may remain visible in the interface as a visual element, but it does not provide account creation access.
