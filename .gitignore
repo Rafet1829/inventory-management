@@ -1,0 +1,15 @@
+# Local configuration / secrets
+.env
+.env.*
+config.js
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Archives / temporary exports
+*.zip
+*.tmp
