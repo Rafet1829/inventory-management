@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inventory Manager</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#6d788b;--line:#e4e9f1;--blue:#3767ff;--blue2:#eef2ff;--green:#0e8c67;--green2:#e8f8f2;--amber:#a96c00;--amber2:#fff4db;--red:#c9364c;--red2:#fff0f2;--shadow:0 8px 28px rgba(30,45,80,.07);--radius:14px}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}.top{position:sticky;top:0;z-index:20;height:56px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 14px;backdrop-filter:blur(10px)}.brand{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:14px;font-weight:850}.brandmark{width:30px;height:30px;border-radius:9px;background:var(--blue);color:#fff;display:grid;place-items:center}.nav{display:flex;gap:3px;flex:1;overflow:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav button{border:0;background:transparent;border-radius:8px;padding:7px 9px;color:var(--muted);font-size:11px;font-weight:750;white-space:nowrap}.nav button.active,.nav button:hover{background:var(--blue2);color:var(--blue)}.user{display:flex;gap:8px;align-items:center;white-space:nowrap}.user span{font-size:11px;color:var(--muted)}main{max-width:1500px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}.head h1{font-size:22px;margin:0 0 4px}.head p{margin:0;color:var(--muted);font-size:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.kpirow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric .label{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}.metric .value{font-size:28px;font-weight:900;margin-top:6px}.metric .sub{font-size:10px;color:var(--muted);margin-top:3px}.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:8px 11px;font-size:11px;font-weight:750}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn.success{background:var(--green2);color:var(--green);border-color:#cceee3}.btn.danger{background:var(--red2);color:var(--red);border-color:#f2d1d7}.btn.small{padding:5px 7px;font-size:10px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.toolbar .search{flex:1;min-width:190px;max-width:420px}input,select,textarea{width:100%;border:1px solid #dfe4ec;background:#fff;border-radius:9px;padding:9px 10px;font-size:12px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(55,103,255,.08)}textarea{resize:vertical;min-height:90px}.field{margin-bottom:12px}label{display:block;font-size:10px;font-weight:800;color:#58657a;margin-bottom:5px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}.full{grid-column:1/-1}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:9px 10px;text-align:left;border-bottom:1px solid #edf0f5;vertical-align:middle}th{background:#fafbfd;color:#6c778b;font-size:9px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}td{font-size:11px}tr.low{background:#fffaf2}tr.out{background:#fff3f4}.status{display:inline-flex;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:850}.status.Normal{background:var(--green2);color:var(--green)}.status.Low{background:var(--amber2);color:var(--amber)}.status.Out{background:var(--red2);color:var(--red)}.status.Archived{background:#edf0f4;color:#667085}.tag{display:inline-flex;padding:3px 6px;border-radius:999px;background:var(--blue2);color:#3c56b8;font-size:9px;margin:2px}.tag.secondary{background:#f0f2f5;color:#5f6878}.actions{display:flex;gap:6px;flex-wrap:wrap}.muted{color:var(--muted)}.empty{padding:28px;text-align:center;color:var(--muted);font-size:12px}.listrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.modal{position:fixed;inset:0;background:rgba(14,23,40,.48);display:flex;align-items:center;justify-content:center;padding:15px;z-index:100}.modalbox{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 25px 80px rgba(0,0,0,.24)}.modalhead{display:flex;justify-content:space-between;align-items:center;padding:15px 17px;border-bottom:1px solid var(--line)}.modalhead h2{font-size:16px;margin:0}.modalbody{padding:17px}.modalfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:8px}.loading{position:fixed;inset:0;background:rgba(255,255,255,.72);backdrop-filter:blur(2px);z-index:150;display:flex;align-items:center;justify-content:center}.spinner{width:28px;height:28px;border:3px solid #e7eaf0;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.toast{position:fixed;right:17px;bottom:17px;z-index:200;background:#172033;color:#fff;border-radius:10px;padding:10px 13px;font-size:11px;box-shadow:var(--shadow);max-width:380px}.toast.err{background:#b4233b}.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at top right,#e8edff,transparent 35%),var(--bg)}.logincard{width:min(410px,100%);background:#fff;border:1px solid var(--line);border-radius:20px;padding:29px;box-shadow:0 22px 70px rgba(25,40,80,.13)}.loginlogo{width:44px;height:44px;border-radius:13px;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:900;margin-bottom:16px}.logincard h1{font-size:23px;margin:0 0 5px}.logincard p{font-size:12px;color:var(--muted);margin:0 0 20px}.authswitch{font-size:11px;text-align:center;margin-top:13px;color:var(--muted)}.authswitch a{color:var(--blue);cursor:pointer;font-weight:750}.notice{padding:10px 12px;background:#f3f6ff;color:#4d5f85;border-radius:9px;font-size:11px;margin:8px 0}.barrow{display:grid;grid-template-columns:120px 1fr 55px;gap:8px;align-items:center;font-size:10px;margin-bottom:8px}.bartrack{height:8px;background:#eef1f5;border-radius:999px;overflow:hidden}.barfill{height:100%;background:var(--blue);border-radius:999px}@media(max-width:1000px){.grid2,.kpirow{grid-template-columns:1fr 1fr}}@media(max-width:700px){main{padding:12px}.brand span,.user span{display:none}.grid2,.kpirow{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.head{flex-direction:column}}
+</style>
+
+<style id="hotfix-mobile-v3">
+@media(max-width:760px){
+ html,body{max-width:100%;overflow-x:hidden}
+ body{font-size:14px}
+ .topbar,.header,.app-header{min-height:52px!important;height:auto!important;padding:7px 10px!important}
+ .topbar h1,.header h1,.app-header h1{font-size:16px!important}
+ .main,.content,.main-content{margin-left:0!important;width:100%!important;max-width:100%!important;padding:10px!important}
+ .grid,.cards,.dashboard-grid,.metric-grid,.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ input,select,textarea{font-size:16px!important;min-height:44px!important}
+ button,.btn{min-height:42px!important}
+ .toolbar,.filters,.actions,.page-actions{display:flex!important;flex-wrap:wrap!important;gap:7px!important}
+ .toolbar input,.toolbar select,.filters input,.filters select{flex:1 1 150px!important;min-width:0!important}
+ .table-wrap,.table-container,.table-responsive{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;width:100%!important}
+ table{min-width:720px}
+ .modal,.modal-card,.modal-content,.dialog{max-width:calc(100vw - 16px)!important;width:calc(100vw - 16px)!important;max-height:94vh!important;overflow:auto!important}
+ #keylinePage input[type=number],#keyline input[type=number],[data-page=keyline] input[type=number]{
+   min-height:50px!important;font-size:19px!important;font-weight:700!important;text-align:center!important
+ }
+}
+@media(max-width:420px){
+ .grid,.cards,.dashboard-grid,.metric-grid,.stats-grid{grid-template-columns:1fr!important}
+}
+</style>
+
+
+<style id="hotfix-mobile-v5">
+.mobile-v5-badge{display:none}
+@media(max-width:760px){
+  html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  body{padding-bottom:72px!important;background:#f5f7fb!important}
+
+  /* Very obvious mobile header */
+  .top{
+    height:48px!important;min-height:48px!important;padding:6px 10px!important;
+    position:sticky!important;top:0!important;z-index:1500!important
+  }
+  .brand span{display:none!important}
+  .brand:after{
+    content:"Inventory";font-weight:850;font-size:14px
+  }
+  .brandmark{width:28px!important;height:28px!important}
+  .user span{display:none!important}
+  .user .btn{min-height:34px!important;padding:6px 9px!important}
+
+  /* Mobile navigation becomes a fixed bottom dock */
+  .nav{
+    position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+    top:auto!important;height:64px!important;z-index:2000!important;
+    background:#fff!important;border-top:1px solid #e5e7eb!important;
+    display:flex!important;gap:2px!important;overflow-x:auto!important;
+    padding:5px 6px calc(5px + env(safe-area-inset-bottom))!important;
+    box-shadow:0 -6px 18px rgba(30,45,80,.08)!important;
+    scrollbar-width:none!important
+  }
+  .nav::-webkit-scrollbar{display:none!important}
+  .nav button{
+    flex:0 0 auto!important;min-width:82px!important;height:48px!important;
+    padding:5px 8px!important;border-radius:10px!important;font-size:10px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    white-space:nowrap!important
+  }
+  .nav button.active{background:#eef2ff!important;color:#3767ff!important}
+
+  .mobile-v5-badge{
+    display:block!important;position:fixed;right:8px;top:54px;z-index:1800;
+    background:#172033;color:#fff;padding:3px 7px;border-radius:999px;
+    font-size:9px;font-weight:800;letter-spacing:.04em
+  }
+
+  main{padding:10px!important;max-width:100%!important}
+  .head{display:flex!important;flex-direction:column!important;gap:8px!important;margin-bottom:10px!important}
+  .head h1{font-size:20px!important;margin:0!important}
+  .head p{font-size:11px!important}
+  .head>.actions,.head>button{width:100%!important}
+  .head>.actions .btn,.head>button{flex:1!important}
+
+  .kpirow,.grid2,.grid3{grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .card{padding:11px!important;border-radius:13px!important}
+  .metric .value{font-size:24px!important}
+
+  input,select,textarea{font-size:16px!important;min-height:44px!important}
+  .btn{min-height:42px!important}
+  .toolbar,.actions{gap:7px!important;flex-wrap:wrap!important}
+  .toolbar .search{flex-basis:100%!important;max-width:none!important}
+
+  /* Real card tables on mobile */
+  .tablewrap,.table-responsive{overflow:visible!important;border:0!important}
+  table.mobileV5{display:block!important;min-width:0!important;width:100%!important}
+  table.mobileV5 thead{display:none!important}
+  table.mobileV5 tbody{display:block!important}
+  table.mobileV5 tr{
+    display:block!important;background:#fff!important;border:1px solid #e5e7eb!important;
+    border-radius:12px!important;margin:0 0 9px!important;padding:8px 10px!important;
+    box-shadow:0 1px 3px rgba(0,0,0,.04)!important
+  }
+  table.mobileV5 td{
+    display:grid!important;grid-template-columns:108px minmax(0,1fr)!important;
+    gap:8px!important;align-items:center!important;
+    padding:7px 0!important;border:0!important;border-bottom:1px solid #f0f2f5!important;
+    white-space:normal!important;width:100%!important
+  }
+  table.mobileV5 td:last-child{border-bottom:0!important}
+  table.mobileV5 td:before{
+    content:attr(data-mobile-label);font-size:11px!important;font-weight:800!important;
+    color:#667085!important
+  }
+  table.mobileV5 td .actions{display:flex!important;flex-wrap:wrap!important}
+  table.mobileV5 td .btn{min-height:36px!important}
+
+  /* Keyline optimized */
+  #kSearch{width:100%!important;flex-basis:100%!important}
+  #kRows tr{display:block!important}
+  #kRows tr.keylineHidden{display:none!important}
+  .kCount{
+    width:100%!important;max-width:150px!important;min-height:52px!important;
+    font-size:20px!important;font-weight:800!important;text-align:center!important
+  }
+
+  /* Modals */
+  .modal{padding:5px!important;align-items:flex-end!important}
+  .modalbox{width:100%!important;max-width:none!important;max-height:95vh!important;border-radius:16px 16px 8px 8px!important}
+  .formgrid{grid-template-columns:1fr!important}
+  .full{grid-column:auto!important}
+  .modalfoot{position:sticky!important;bottom:0!important;background:#fff!important;padding:10px 0!important}
+  .modalfoot .btn{flex:1!important}
+}
+@media(max-width:430px){
+  .kpirow,.grid2,.grid3{grid-template-columns:1fr!important}
+}
+</style>
+
+
+<style id="product-search-picker-v7">
+.productPicker{position:relative}
+.productPicker input.productSearchInput{padding-right:38px}
+.productPickerResults{
+  position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5000;
+  background:#fff;border:1px solid #dfe4ec;border-radius:10px;
+  box-shadow:0 12px 30px rgba(23,32,51,.14);max-height:260px;overflow:auto;display:none
+}
+.productPickerResults.open{display:block}
+.productPickerItem{
+  display:block;width:100%;border:0;background:#fff;text-align:left;padding:10px 11px;
+  border-bottom:1px solid #eef1f5;cursor:pointer
+}
+.productPickerItem:last-child{border-bottom:0}
+.productPickerItem:hover,.productPickerItem.active{background:#f4f7ff}
+.productPickerItem b{display:block;font-size:12px;color:#172033}
+.productPickerItem small{display:block;margin-top:2px;font-size:10px;color:#6d788b}
+.productPickerEmpty{padding:12px;color:#6d788b;font-size:11px}
+.productPickerClear{
+  position:absolute;right:7px;top:7px;width:30px;height:30px;min-height:30px!important;
+  padding:0!important;border:0;background:transparent;color:#6d788b;font-size:18px;z-index:2
+}
+@media(max-width:760px){
+  .productPickerResults{position:fixed;left:10px;right:10px;top:auto;bottom:78px;max-height:46vh;border-radius:14px}
+  .productPickerItem{padding:13px 12px}
+  .productPickerItem b{font-size:14px}
+  .productPickerItem small{font-size:11px}
+}
+</style>
+
+
+<style id="maxhold-mode-v2-css">
+.stockModeControl{
+  display:flex;align-items:center;gap:8px;padding:5px 7px 5px 10px;
+  border:1px solid #dfe5ef;border-radius:14px;background:#f8fafc;
+  box-shadow:0 4px 14px rgba(23,32,51,.06);white-space:nowrap
+}
+.stockModeTitle{font-size:9px;font-weight:900;color:#687386;letter-spacing:.08em}
+.stockModeToggle{display:flex;gap:3px;padding:3px;border-radius:11px;background:#e9eef6}
+.stockModeBtn{
+  border:0!important;min-height:30px!important;padding:6px 10px!important;border-radius:8px!important;
+  background:transparent!important;color:#697586!important;font-size:10px!important;font-weight:900!important;
+  cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease
+}
+.stockModeBtn:hover{transform:translateY(-1px)}
+.stockModeBtn.active.offpeak{background:#fff!important;color:#16794c!important;box-shadow:0 2px 8px rgba(22,121,76,.14)}
+.stockModeBtn.active.peak{background:#fff!important;color:#c7354f!important;box-shadow:0 2px 8px rgba(199,53,79,.15)}
+.modePill{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;font-size:10px;font-weight:900;background:#eaf8f1;color:#16794c}
+.modePill.peak{background:#fff0f2;color:#c9364c}
+.maxHoldMissing{color:#98a2b3;font-style:italic}
+.card{transition:box-shadow .18s ease,transform .18s ease}
+.card:hover{box-shadow:0 9px 26px rgba(23,32,51,.08)}
+.btn{transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}
+.btn:hover{transform:translateY(-1px)}
+.notice{border-radius:12px}
+@media(max-width:760px){
+ .stockModeControl{
+   position:fixed;left:50%;transform:translateX(-50%);bottom:10px;top:auto;right:auto;z-index:2600;
+   padding:5px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);
+   border-radius:15px;box-shadow:0 8px 30px rgba(23,32,51,.22)
+ }
+ .stockModeTitle{display:none}
+ .stockModeToggle{padding:3px}
+ .stockModeBtn{min-height:36px!important;padding:7px 14px!important;font-size:11px!important}
+ main{padding-bottom:76px!important}
+}
+</style>
+
+
+<style id="smart-order-v3-css">
+.orderKnowledge{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.orderKnowledge>div{padding:12px 14px;border:1px solid #e4e9f1;border-radius:14px;background:linear-gradient(180deg,#fff,#f8fafc);box-shadow:0 4px 14px rgba(23,32,51,.04)}
+.orderKnowledge b{display:block;font-size:12px;margin-bottom:4px;color:#172033}
+.orderKnowledge span{display:block;font-size:10px;line-height:1.45;color:#697586}
+.suggestQty{display:inline-flex;min-width:34px;justify-content:center;padding:6px 9px;border-radius:9px;background:#eaf8f1;color:#16794c;font-weight:950;font-size:13px}
+.calcMethod{display:inline-flex;padding:4px 7px;border-radius:999px;background:#eef2ff;color:#4864c8;font-size:9px;font-weight:850}
+@media(max-width:760px){
+ .orderKnowledge{grid-template-columns:1fr;gap:7px}
+ .orderKnowledge>div{padding:10px 12px}
+}
+</style>
+
+
+<style id="on-order-fix-v5-css">
+.orderEditSummary{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.orderEditSummary>div{padding:10px 12px;border:1px solid #e5eaf2;border-radius:11px;background:#f8fafc}
+.orderEditSummary span{display:block;font-size:9px;text-transform:uppercase;font-weight:850;color:#7b8798;margin-bottom:3px}
+.orderEditSummary b{font-size:12px;color:#172033}
+@media(max-width:560px){.orderEditSummary{grid-template-columns:1fr 1fr}}
+</style>
+
+</head>
+<body>
+<div id="authView" class="login"><div class="logincard"><div class="loginlogo">IM</div><h1 id="authTitle">Inventory Manager</h1><p id="authSubtitle">Fast inventory management powered by PostgreSQL.</p><div id="normalAuthFields"><div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div><div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password"></div><div id="signupNameField" class="field hidden"><label>Display name</label><input id="authName" placeholder="Rafet"></div><button id="authButton" class="btn primary" style="width:100%" onclick="submitAuth()">Sign in</button><div id="forgotRow" class="authswitch"><a onclick="forgotPassword()">Forgot password?</a></div><div class="authswitch"><span id="authSwitchText">First time?</span> <a onclick="toggleAuthMode()" id="authSwitchLink">Create account</a></div></div><div id="resetAuthFields" class="hidden"><div class="notice">Choose a new password for your account.</div><div class="field"><label>New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8"></div><div class="field"><label>Confirm new password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8"></div><button class="btn primary" style="width:100%" onclick="saveNewPassword()">Update password</button></div></div></div>
+<div id="appView" class="hidden"><div class="mobile-v5-badge">AUTH FAST V11 · ORDER ARRIVALS V12.1</div><header class="top"><div class="brand"><div class="brandmark">IM</div><span>Inventory Manager</span></div><nav class="nav" id="nav"></nav><div class="stockModeControl" id="stockModeControl" title="Choose which maximum stock target is used for ordering">
+  <span class="stockModeTitle">STOCK MODE</span>
+  <div class="stockModeToggle" role="group" aria-label="Stock mode">
+    <button id="offPeakModeBtn" class="stockModeBtn" type="button" onclick="setStockMode('off_peak')">OFF PEAK</button>
+    <button id="peakModeBtn" class="stockModeBtn" type="button" onclick="setStockMode('peak')">PEAK</button>
+  </div>
+</div><div class="user"><span id="userLabel"></span><button class="btn small" onclick="logout()">Logout</button></div></header><main id="main"></main></div>
+<div id="modal" class="modal hidden" onclick="if(event.target===this)closeModal()"><div class="modalbox"><div class="modalhead"><h2 id="modalTitle"></h2><button class="btn small" onclick="closeModal()">×</button></div><div class="modalbody" id="modalBody"></div></div></div>
+<div id="loading" class="loading hidden"><div class="spinner"></div></div><div id="toast" class="toast hidden"></div>
+<script>
+const SUPABASE_URL='YOUR_SUPABASE_URL';
+const APP_URL=window.location.origin;
+const SUPABASE_PUBLISHABLE_KEY='YOUR_SUPABASE_PUBLISHABLE_KEY';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const NAV=[['dashboard','Dashboard'],['products','Products'],['keyline','Keyline'],['receive','Receive'],['waste','Waste'],['transfer','Stock Transfer'],['ordering','Ordering'],['insights','Insights'],['setup','Setup'],['recycle','Recycle Bin']];
+const state={page:'dashboard',user:null,products:[],suppliers:[],tags:[],productTags:[],transactions:[],waste:[],metrics:[],activity:[],recycle:[],settings:{stock_mode:'off_peak'},purchaseOrders:[],masterOrders:[]};let signupMode=false;
+const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'),n=v=>Number(v||0),fmt=v=>n(v).toLocaleString(undefined,{maximumFractionDigits:2});
+const isoDate=v=>{if(!v)return'';const d=new Date(v);if(isNaN(d))return'';return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)},dstr=v=>{if(!v)return'—';const d=new Date(v);return isNaN(d)?String(v):d.toLocaleDateString()},dtstr=v=>{if(!v)return'—';const d=new Date(v);return isNaN(d)?String(v):d.toLocaleString()};
+function busy(v){$('loading').classList.toggle('hidden',!v)}function toast(msg,err=false){const el=$('toast');el.textContent=msg;el.className='toast'+(err?' err':'');el.classList.remove('hidden');clearTimeout(window.__tt);window.__tt=setTimeout(()=>el.classList.add('hidden'),3200)}function errText(e){return e?.message||String(e||'Something went wrong')}async function safe(fn){busy(true);try{return await fn()}catch(e){console.error(e);toast(errText(e),true);throw e}finally{busy(false)}}
+
+function stockMode(){return state.settings?.stock_mode==='peak'?'peak':'off_peak'}
+function stockModeLabel(){return stockMode()==='peak'?'PEAK':'OFF PEAK'}
+function activeMaxHold(p){const v=stockMode()==='peak'?p.peak_max_hold:p.off_peak_max_hold;return (v===null||v===undefined||v==='')?null:n(v)}
+
+function supplierKey(p){
+  const s=(supplierName(p.supplier_id)||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(s.includes('turner'))return 'turner';
+  if(s.includes('firstchoice'))return 'firstchoice';
+  if(s.includes('potts'))return 'potts';
+  return 'other';
+}
+function dayDiff(from,to){return (to-from+7)%7}
+function supplierScheduleInfo(p,now=new Date()){
+  const k=supplierKey(p),d=now.getDay(); // 0 Sun ... 6 Sat
+  // coverageDays = expected days the new delivery should cover until the following delivery.
+  if(k==='turner'){
+    const cycles=[{o:1,d:2,next:4},{o:3,d:4,next:6},{o:5,d:6,next:2}];
+    let best=null;
+    for(const c of cycles){
+      const wait=dayDiff(d,c.o);
+      if(best===null||wait<best.wait)best={...c,wait};
+    }
+    const deliveryWait=best.wait+dayDiff(best.o,best.d);
+    const coverage=dayDiff(best.d,best.next)||7;
+    return {key:k,orderDay:best.o,deliveryDay:best.d,daysToDelivery:deliveryWait,coverageDays:coverage,
+      text:`${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][best.o]} order → ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][best.d]} delivery · cover ${coverage} day${coverage===1?'':'s'}`};
+  }
+  if(k==='potts'){
+    // Tue -> Wed; Thu order supplies Fri and next Mon. For ordering quantity,
+    // Thursday's delivery coverage is treated through the next Tuesday/Wednesday cycle.
+    const candidates=[
+      {o:2,d:3,next:5,label:'Tue order → Wed delivery'},
+      {o:4,d:5,next:1,label:'Thu order → Fri delivery'},
+      {o:4,d:1,next:3,label:'Thu order → Mon delivery'}
+    ];
+    let best=null;
+    for(const c of candidates){
+      const wait=dayDiff(d,c.o);
+      const dw=wait+dayDiff(c.o,c.d);
+      if(best===null||dw<best.dw)best={...c,wait,dw};
+    }
+    const coverage=dayDiff(best.d,best.next)||7;
+    return {key:k,orderDay:best.o,deliveryDay:best.d,daysToDelivery:best.dw,coverageDays:coverage,
+      text:`${best.label} · cover ${coverage} day${coverage===1?'':'s'}`};
+  }
+  if(k==='firstchoice'){
+    // Daily ordering; no Sunday delivery. Bank holidays remain a manual exception because
+    // the app has no live UK bank-holiday calendar.
+    let delivery=(d+1)%7,wait=1;
+    if(delivery===0){delivery=1;wait=2}
+    return {key:k,orderDay:d,deliveryDay:delivery,daysToDelivery:wait,coverageDays:1,
+      text:`Daily order → next delivery ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][delivery]} · no Sunday/BH delivery`};
+  }
+  return {key:k,orderDay:null,deliveryDay:null,daysToDelivery:0,coverageDays:null,
+    text:'No delivery schedule set · Max Hold fallback'};
+}
+function smartSuggestedOrder(p){
+  const target=activeMaxHold(p);
+  if(target===null)return {qty:null,target:null,need:null,usage:n(metric(p.id).avg_daily_usage),schedule:supplierScheduleInfo(p),method:'No Max Hold'};
+  const stock=n(p.current_stock),onOrder=n(p.on_order_qty),usage=Math.max(0,n(metric(p.id).avg_daily_usage));
+  const schedule=supplierScheduleInfo(p);
+  // If we have usable history and a known schedule, cover demand until delivery + the
+  // period that delivery must last. Otherwise retain the proven Max Hold fill logic.
+  if(schedule.key!=='other' && usage>0){
+    const horizon=Math.max(1,schedule.daysToDelivery+schedule.coverageDays);
+    const demand=Math.ceil(usage*horizon);
+    const desired=Math.min(target,Math.max(n(p.safety_stock),demand));
+    const qty=Math.max(0,Math.ceil(desired-stock-onOrder));
+    return {qty,target,need:desired,usage,schedule,horizon,method:'Schedule + usage'};
+  }
+  const qty=Math.max(0,Math.ceil(target-stock-onOrder));
+  return {qty,target,need:target,usage,schedule,horizon:null,method:'Max Hold fallback'};
+}
+function suggestedOrderQty(p){return smartSuggestedOrder(p).qty}
+
+async function setStockMode(mode){
+  if(!['off_peak','peak'].includes(mode))return;
+  await safe(async()=>{
+    const r=await sb.rpc('set_stock_mode',{p_mode:mode});if(r.error)throw r.error;
+    state.settings.stock_mode=mode;
+    syncStockModeControl();
+    await renderPage();
+    toast('Stock mode changed to '+stockModeLabel()+'.');
+  });
+}
+function syncStockModeControl(){
+  const off=$('offPeakModeBtn'),peak=$('peakModeBtn');
+  if(!off||!peak)return;
+  const isPeak=stockMode()==='peak';
+  off.className='stockModeBtn'+(!isPeak?' active offpeak':'');
+  peak.className='stockModeBtn'+(isPeak?' active peak':'');
+  const box=$('stockModeControl');
+  if(box)box.setAttribute('aria-label','Current stock mode: '+stockModeLabel());
+}
+function statusBadge(s){s=s||'Normal';return `<span class="status ${s}">${esc(s)}</span>`}function productName(id){return state.products.find(p=>p.id===id)?.name||id}function supplierName(id){return state.suppliers.find(s=>s.id===id)?.name||'Not assigned'}function metric(id){return state.metrics.find(m=>m.product_id===id)||{usage_7d:0,usage_30d:0,avg_daily_usage:0,days_remaining:null,recommended_par:0}}function productTags(id){const tids=state.productTags.filter(x=>x.product_id===id).map(x=>x.tag_id);return state.tags.filter(t=>tids.includes(t.id))}
+function toggleAuthMode(){signupMode=!signupMode;$('signupNameField').classList.toggle('hidden',!signupMode);$('authButton').textContent=signupMode?'Create account':'Sign in';$('authSwitchText').textContent=signupMode?'Already have an account?':'First time?';$('authSwitchLink').textContent=signupMode?'Sign in':'Create account';$('forgotRow').classList.toggle('hidden',signupMode)}
+async function submitAuth(){
+  const email=$('authEmail').value.trim();
+  const password=$('authPassword').value;
+  if(!email||!password)return toast('Email and password are required.',true);
+
+  if(navigator.onLine===false)return toast('This device is offline. Reconnect and try again.',true);
+  busy(true);
+  try{
+    if(signupMode){
+      const display_name=$('authName').value.trim()||email.split('@')[0];
+      const {data,error}=await withTimeout_(
+        sb.auth.signUp({email,password,options:{data:{display_name},emailRedirectTo:APP_URL}}),
+        20000,'Sign up'
+      );
+      if(error)throw error;
+      if(!data?.session){
+        toast('Account created. Check your email if confirmation is enabled.');
+        toggleAuthMode();
+        return;
+      }
+      await startApp(data.user);
+      return;
+    }
+
+    const {data,error}=await withTimeout_(sb.auth.signInWithPassword({email,password}),30000,'Sign in');
+    if(error)throw error;
+    if(!data?.session||!data?.user)throw new Error('No login session was returned.');
+    await startApp(data.user);
+  }catch(e){
+    console.error('AUTH ERROR',e);
+    const msg=String(e?.message||e||'');
+    toast(/timed out/i.test(msg)
+      ? 'Cannot reach the login service. Check the connection and try again.'
+      : errText(e),true);
+  }finally{
+    busy(false);
+  }
+}
+async function forgotPassword(){const email=$('authEmail').value.trim();if(!email)return toast('Enter your email address first.',true);await safe(async()=>{const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:APP_URL});if(error)throw error;toast('Password reset email sent. Check your inbox and spam folder.');})}
+function showPasswordReset(){signupMode=false;$('normalAuthFields').classList.add('hidden');$('resetAuthFields').classList.remove('hidden');$('authTitle').textContent='Reset Password';$('authSubtitle').textContent='Enter a new password below.';$('authView').classList.remove('hidden');$('appView').classList.add('hidden')}
+async function saveNewPassword(){const p=$('newPassword').value,c=$('confirmPassword').value;if(!p||p.length<8)return toast('Use at least 8 characters.',true);if(p!==c)return toast('Passwords do not match.',true);await safe(async()=>{const {error}=await sb.auth.updateUser({password:p});if(error)throw error;toast('Password updated. You are signed in.');history.replaceState({},document.title,location.pathname);$('resetAuthFields').classList.add('hidden');$('normalAuthFields').classList.remove('hidden');$('authTitle').textContent='Inventory Manager';$('authSubtitle').textContent='Fast inventory management powered by PostgreSQL.';await startApp();})}
+async function logout(){
+  const btn=document.querySelector('button[onclick="logout()"]');
+  if(btn){btn.disabled=true;btn.textContent='Logging out…'}
+
+  state.user=null;
+  __startingApp=false;
+  showAuthView_();
+  $('resetAuthFields').classList.add('hidden');
+  $('normalAuthFields').classList.remove('hidden');
+  $('authTitle').textContent='Inventory Manager';
+  $('authSubtitle').textContent='Fast inventory management powered by PostgreSQL.';
+  $('authPassword').value='';
+
+  try{
+    const {error}=await withTimeout_(sb.auth.signOut({scope:'local'}),8000,'Logout');
+    if(error)throw error;
+  }catch(e){
+    console.warn('Logout service unavailable; clearing browser auth session.',e);
+    try{
+      for(const storage of [localStorage,sessionStorage]){
+        Object.keys(storage)
+          .filter(k=>k.startsWith('sb-')&&k.endsWith('-auth-token'))
+          .forEach(k=>storage.removeItem(k));
+      }
+    }catch(_){}
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Logout'}
+  }
+}
+function renderNav(){$('nav').innerHTML=NAV.map(([id,label])=>`<button class="${state.page===id?'active':''}" onclick="go('${id}')">${label}</button>`).join('')}async function go(page){state.page=page;renderNav();await renderPage()}
+let __startingApp=false;
+function showAuthView_(){
+  $('appView').classList.add('hidden');
+  $('authView').classList.remove('hidden');
+  busy(false);
+}
+function showAppView_(user){
+  state.user=user;
+  $('authView').classList.add('hidden');
+  $('appView').classList.remove('hidden');
+  $('userLabel').textContent=user?.user_metadata?.display_name||user?.email||'Signed in';
+  renderNav();
+}
+function withTimeout_(promise,ms,label){return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error((label||'Request')+' timed out.')),ms))])}
+async function startApp(knownUser){
+  if(__startingApp)return;
+  __startingApp=true;
+  try{
+    let user=knownUser||null;
+    if(!user){
+      const {data,error}=await withTimeout_(sb.auth.getSession(),8000,'Session');
+      if(error)throw error;
+      user=data?.session?.user||null;
+    }
+    if(!user){showAuthView_();return}
+
+    // Authentication is complete before inventory requests begin.
+    showAppView_(user);
+    state.page='dashboard';
+    await go('dashboard');
+
+    try{
+      await loadCore();
+      await go(state.page||'dashboard');
+    }catch(e){
+      console.error('INVENTORY STARTUP ERROR',e);
+      toast('You are signed in, but some inventory data did not load. Refresh the page once.',true);
+    }
+  }catch(e){
+    console.error('SESSION STARTUP ERROR',e);
+    showAuthView_();
+    toast(errText(e),true);
+  }finally{
+    __startingApp=false;
+    busy(false);
+  }
+}
+async function loadCore(){
+  busy(true);
+  try{
+    // Essential data first so a slow optional report table can never trap the app on Login.
+    const [pr,su,se]=await Promise.all([
+      withTimeout_(sb.from('products').select('*').is('deleted_at',null).order('name'),15000,'Products'),
+      withTimeout_(sb.from('suppliers').select('*').eq('active',true).order('name'),15000,'Suppliers'),
+      withTimeout_(sb.from('inventory_settings').select('*').eq('id',1).maybeSingle(),15000,'Settings')
+    ]);
+    if(pr.error)throw pr.error;
+    if(su.error)throw su.error;
+    if(se.error)console.warn('Settings load:',se.error);
+    state.products=pr.data||[];
+    state.suppliers=su.data||[];
+    state.settings=se.data||{stock_mode:'off_peak'};
+    syncStockModeControl();
+
+    // Optional/history data: failures no longer prevent Dashboard from loading.
+    const optional=await Promise.allSettled([
+      withTimeout_(sb.from('tags').select('*').eq('active',true).order('name'),12000,'Tags'),
+      withTimeout_(sb.from('product_tags').select('*'),12000,'Product tags'),
+      withTimeout_(sb.from('stock_transactions').select('*').order('transaction_date',{ascending:false}).limit(2000),12000,'Transactions'),
+      withTimeout_(sb.from('waste_logs').select('*').order('waste_date',{ascending:false}).limit(2000),12000,'Waste'),
+      withTimeout_(sb.from('product_metrics').select('*'),12000,'Metrics'),
+      withTimeout_(sb.from('purchase_orders').select('*').order('expected_arrival',{ascending:true}).limit(2000),12000,'Purchase orders'),
+      withTimeout_(sb.from('master_orders').select('*').order('order_number',{ascending:false}).limit(1000),12000,'Master orders'),
+      withTimeout_(sb.from('activity_logs').select('*').order('occurred_at',{ascending:false}).limit(1000),12000,'Activity'),
+      withTimeout_(sb.from('recycle_bin').select('*').is('restored_at',null).order('deleted_at',{ascending:false}),12000,'Recycle bin')
+    ]);
+    const keys=['tags','productTags','transactions','waste','metrics','purchaseOrders','masterOrders','activity','recycle'];
+    optional.forEach((res,i)=>{
+      if(res.status==='fulfilled'&&!res.value.error)state[keys[i]]=res.value.data||[];
+      else{
+        state[keys[i]]=[];
+        console.warn('Optional load failed:',keys[i],res.status==='rejected'?res.reason:res.value.error);
+      }
+    });
+
+    // Cleanup must never block login.
+    Promise.resolve(sb.rpc('purge_expired_recycle_bin')).catch(()=>{});
+  }finally{
+    busy(false);
+  }
+}
+async function renderPage(){const fn={dashboard:renderDashboard,products:renderProducts,keyline:renderKeyline,receive:renderReceive,waste:renderWaste,transfer:renderStockTransfer,ordering:renderOrdering,insights:renderInsights,setup:renderSetup,recycle:renderRecycle}[state.page];if(fn)await fn()}
+function renderDashboard(){const low=state.products.filter(p=>p.status==='Low'||p.status==='Out'),weekAgo=Date.now()-7*86400000,waste7=state.waste.filter(w=>new Date(w.waste_date).getTime()>=weekAgo).reduce((s,w)=>s+n(w.amount),0);$('main').innerHTML=`<div class="head"><div><h1>Dashboard</h1><p>Live PostgreSQL inventory overview.</p></div><button class="btn primary" onclick="openProduct()">+ Add Product</button></div><div class="kpirow"><div class="card metric"><div class="label">Products</div><div class="value">${state.products.length}</div><div class="sub">Active SKUs</div></div><div class="card metric"><div class="label">Low / Out</div><div class="value">${low.length}</div><div class="sub">Needs attention</div></div><div class="card metric"><div class="label">Waste 7 Days</div><div class="value">${fmt(waste7)}</div><div class="sub">Logged separately</div></div><div class="card metric"><div class="label">Stock Mode</div><div class="value" style="font-size:20px">${stockModeLabel()}</div><div class="sub">Use the toggle to switch ordering targets</div></div></div><div class="grid2" style="margin-top:12px"><div class="card"><h3 style="font-size:13px;margin-top:0">Quick Actions</h3><div class="actions"><button class="btn primary" onclick="go('keyline')">New Keyline Count</button><button class="btn success" onclick="openReceive()">Receive Delivery</button><button class="btn danger" onclick="openWaste()">Log Waste</button><button class="btn" onclick="go('transfer')">Stock Transfer</button></div></div><div class="card"><h3 style="font-size:13px;margin-top:0">Safety Stock Alerts</h3>${low.length?low.slice(0,8).map(p=>`<div class="listrow"><span><b>${esc(p.name)}</b><br><span class="muted">${fmt(p.current_stock)} ${esc(p.unit||'')}</span></span>${statusBadge(p.status)}</div>`).join(''):'<div class="empty">No low-stock alerts.</div>'}</div></div>`}
+function outstandingOrders(productId){return (state.purchaseOrders||[]).filter(o=>o.product_id===productId&&['open','partially_received'].includes(o.status)&&n(o.quantity_ordered)>n(o.quantity_received))}
+function nextArrival(productId){const rows=outstandingOrders(productId).filter(o=>o.expected_arrival).sort((a,b)=>String(a.expected_arrival).localeCompare(String(b.expected_arrival)));return rows[0]||null}
+function orderSummaryHtml(p){const o=nextArrival(p.id),qty=n(p.on_order_qty);if(qty<=0)return '0';return `<b>${fmt(qty)}</b>${o?`<div class="muted">Arrives ${dstr(o.expected_arrival)}</div>`:'<div class="muted">Arrival not set</div>'}`}
+function expectedArrivalFor(p,base=new Date()){const c=supplierScheduleInfo(p,base),d=new Date(base);d.setHours(12,0,0,0);d.setDate(d.getDate()+Math.max(0,n(c.daysToDelivery)));return isoDate(d)}
+function renderProducts(){$('main').innerHTML=`<div class="head"><div><h1>Products</h1><p>Keyline controls Stock on Hand. Safety controls low alerts. Off-Peak / Peak Max Hold controls ordering.</p></div><div class="actions"><button class="btn" onclick="openBulk()">Bulk Import</button><button class="btn" onclick="openCsvImport()">Import CSV</button><button class="btn primary" onclick="openProduct()">+ Add Product</button></div></div><div class="card"><div class="toolbar"><input id="pSearch" class="search" placeholder="Search product, SKU, pack size..."><select id="pStatus" style="width:auto"><option value="all">All status</option><option>Normal</option><option>Low</option><option>Out</option></select><span class="modePill ${stockMode()==='peak'?'peak':''}">${stockModeLabel()}</span></div><div id="pTable"></div></div>`;const draw=()=>{const q=$('pSearch').value.toLowerCase(),st=$('pStatus').value,rows=state.products.filter(p=>[p.name,p.sku,p.pack_size,p.category].join(' ').toLowerCase().includes(q)&&(st==='all'||p.status===st));$('pTable').innerHTML=rows.length?`<div class="tablewrap"><table><thead><tr><th>Product</th><th>Pack</th><th>SKU</th><th>Supplier</th><th>Stock</th><th>Safety</th><th>Off Max</th><th>Peak Max</th><th>On Order</th><th>Status</th><th>Usage/Day</th><th>Tags</th><th>Actions</th></tr></thead><tbody>${rows.map(p=>{const m=metric(p.id),tags=productTags(p.id),active=activeMaxHold(p);return `<tr class="${p.status==='Out'?'out':p.status==='Low'?'low':''}"><td><b>${esc(p.name)}</b><div class="muted">${esc(p.category||'')}</div></td><td>${esc(p.pack_size||'—')}</td><td>${esc(p.sku||'—')}</td><td>${esc(supplierName(p.supplier_id))}</td><td><b>${fmt(p.current_stock)}</b> ${esc(p.unit||'')}</td><td>${fmt(p.safety_stock)}</td><td>${p.off_peak_max_hold==null?'<span class="maxHoldMissing">—</span>':fmt(p.off_peak_max_hold)}</td><td>${p.peak_max_hold==null?'<span class="maxHoldMissing">—</span>':fmt(p.peak_max_hold)}</td><td>${orderSummaryHtml(p)}</td><td>${statusBadge(p.status)}</td><td>${fmt(m.avg_daily_usage)}</td><td>${tags.map(t=>`<span class="tag ${t.tag_type==='secondary'?'secondary':''}">${esc(t.name)}</span>`).join('')||'—'}</td><td><div class="actions"><button class="btn small" onclick="openProduct('${p.id}')">Edit</button><button class="btn small danger" onclick="recycleProduct('${p.id}')">Delete</button></div></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">No products found.</div>'};$('pSearch').oninput=draw;$('pStatus').onchange=draw;draw()}
+function modal(title,html){$('modalTitle').textContent=title;$('modalBody').innerHTML=html;$('modal').classList.remove('hidden')}function closeModal(){$('modal').classList.add('hidden')}function supplierOpts(id=''){return `<option value="">Not assigned</option>${state.suppliers.map(s=>`<option value="${s.id}" ${s.id===id?'selected':''}>${esc(s.name)}</option>`).join('')}`}
+function openProduct(id=''){const p=id?state.products.find(x=>x.id===id):{name:'',pack_size:'',sku:'',category:'',unit:'',current_stock:0,safety_stock:0,off_peak_max_hold:null,peak_max_hold:null,on_order_qty:0,reorder_date:'',supplier_id:''},selected=productTags(id).map(t=>t.id);modal(id?'Edit Product':'Add Product',`<div class="formgrid"><div class="field"><label>Name *</label><input id="fName" value="${esc(p.name)}"></div><div class="field"><label>Pack Size</label><input id="fPack" value="${esc(p.pack_size||'')}"></div><div class="field"><label>SKU</label><input id="fSku" value="${esc(p.sku||'')}"></div><div class="field"><label>Category</label><input id="fCat" value="${esc(p.category||'')}"></div><div class="field"><label>Unit</label><input id="fUnit" value="${esc(p.unit||'')}"></div><div class="field"><label>Supplier</label><select id="fSupplier">${supplierOpts(p.supplier_id)}</select></div><div class="field"><label>Current Stock</label><input id="fStock" type="number" min="0" step="any" value="${n(p.current_stock)}"></div><div class="field"><label>Safety / Minimum Stock</label><input id="fSafety" type="number" min="0" step="any" value="${n(p.safety_stock)}"></div><div class="field"><label>Off-Peak Max Hold</label><input id="fOffMax" type="number" min="0" step="any" value="${p.off_peak_max_hold==null?'':n(p.off_peak_max_hold)}" placeholder="Optional"></div><div class="field"><label>Peak Max Hold</label><input id="fPeakMax" type="number" min="0" step="any" value="${p.peak_max_hold==null?'':n(p.peak_max_hold)}" placeholder="Optional"></div><div class="field"><label>Currently On Order</label><input id="fOnOrder" type="number" min="0" step="any" value="${n(p.on_order_qty)}"></div><div class="field"><label>Manual Reorder Date</label><input id="fReorder" type="date" value="${isoDate(p.reorder_date)}"></div><div class="field full"><div class="notice">Low-stock alerts use <b>Safety Stock</b>. Ordering replenishes toward the active <b>${stockModeLabel()} Max Hold</b>.</div></div><div class="field full"><label>Tags</label><div>${state.tags.map(t=>`<label style="display:inline-flex;gap:5px;align-items:center;margin:4px 9px 4px 0"><input class="tagCheck" type="checkbox" value="${t.id}" ${selected.includes(t.id)?'checked':''}>${esc(t.name)} <span class="muted">(${t.tag_type})</span></label>`).join('')||'<span class="muted">Create tags first.</span>'}</div></div></div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveProduct('${id}')">Save Product</button></div>`)}
+async function saveProduct(id=''){const nullableNum=id=>{const v=$(id).value.trim();return v===''?null:n(v)};const payload={name:$('fName').value.trim(),pack_size:$('fPack').value.trim()||null,sku:$('fSku').value.trim()||null,category:$('fCat').value.trim()||null,unit:$('fUnit').value.trim()||null,supplier_id:$('fSupplier').value||null,current_stock:n($('fStock').value),safety_stock:n($('fSafety').value),off_peak_max_hold:nullableNum('fOffMax'),peak_max_hold:nullableNum('fPeakMax'),on_order_qty:n($('fOnOrder').value),reorder_date:$('fReorder').value||null};if(!payload.name)return toast('Product name is required.',true);await safe(async()=>{let pid=id;if(id){const r=await sb.from('products').update(payload).eq('id',id).select().single();if(r.error)throw r.error}else{const r=await sb.from('products').insert(payload).select().single();if(r.error)throw r.error;pid=r.data.id}const del=await sb.from('product_tags').delete().eq('product_id',pid);if(del.error)throw del.error;const tids=[...document.querySelectorAll('.tagCheck:checked')].map(x=>x.value);if(tids.length){const ins=await sb.from('product_tags').insert(tids.map(tag_id=>({product_id:pid,tag_id})));if(ins.error)throw ins.error}await sb.rpc('log_activity',{p_action:id?'Edit Product':'Add Product',p_details:payload.name});closeModal();await loadCore();await renderProducts();toast('Product saved.')})}
+function openBulk(){modal('Bulk Import',`<div class="notice">One product per line: <b>Product | Pack Size | SKU</b>. Only product name is required.</div><div class="field"><label>Products</label><textarea id="bulkText" rows="12" placeholder="Chicken Breast | 5kg Box | CH001\nFries | 10kg Bag | FR001"></textarea></div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveBulk()">Import</button></div>`)}
+async function saveBulk(){const rows=$('bulkText').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{const a=line.split('|').map(x=>x.trim());return{name:a[0],pack_size:a[1]||null,sku:a[2]||null}}).filter(x=>x.name);if(!rows.length)return toast('No valid products.',true);await safe(async()=>{const r=await sb.from('products').insert(rows);if(r.error)throw r.error;await sb.rpc('log_activity',{p_action:'Bulk Import',p_details:`${rows.length} products`});closeModal();await loadCore();await renderProducts();toast(`${rows.length} products imported.`)})}
+function openCsvImport(){modal('Import Products CSV',`<div class="notice">Headers supported: Name or Product, PackSize or Pack Size, SKU, Category, Unit, CurrentStock, ParLevel.</div><div class="field"><label>CSV file</label><input id="csvFile" type="file" accept=".csv,text/csv"></div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="importCsv()">Import CSV</button></div>`)}
+function parseCsv(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());if(!lines.length)return[];const parse=line=>{let a=[],cur='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++}else q=!q}else if(c===','&&!q){a.push(cur.trim());cur=''}else cur+=c}a.push(cur.trim());return a};const h=parse(lines[0]).map(x=>x.toLowerCase().replace(/\s+/g,''));return lines.slice(1).map(l=>{const v=parse(l),o={};h.forEach((k,i)=>o[k]=v[i]??'');return o})}
+async function importCsv(){
+ const file=$('csvFile').files[0];
+ if(!file)return toast('Choose a CSV file.',true);
+
+ const raw=parseCsv(await file.text()).map(o=>({
+   name:(o.name||o.product||'').trim(),
+   pack_size:(o.packsize||'').trim()||null,
+   sku:(o.sku||'').trim()||null,
+   category:(o.category||'').trim()||null,
+   unit:(o.unit||'').trim()||null,
+   current_stock:n(o.currentstock),
+   off_peak_max_hold:(o.offpeakmaxhold||o.offpeakmax||'')===''?null:n(o.offpeakmaxhold||o.offpeakmax),peak_max_hold:(o.peakmaxhold||o.peakmax||'')===''?null:n(o.peakmaxhold||o.peakmax),safety_stock:n(o.safetystock)
+ })).filter(x=>x.name);
+
+ if(!raw.length)return toast('No products found in CSV.',true);
+
+ await safe(async()=>{
+   const existingRes=await sb.from('products').select('name,pack_size,sku').is('deleted_at',null);
+   if(existingRes.error)throw existingRes.error;
+
+   const norm=s=>String(s||'').trim().toLowerCase();
+   const existingSku=new Set((existingRes.data||[]).map(x=>norm(x.sku)).filter(Boolean));
+   const existingNamePack=new Set((existingRes.data||[]).map(x=>norm(x.name)+'|'+norm(x.pack_size)));
+
+   const seenSku=new Set();
+   const seenNamePack=new Set();
+   const toInsert=[];
+   let skippedExisting=0, skippedCsv=0;
+
+   for(const row of raw){
+     const skuKey=norm(row.sku);
+     const npKey=norm(row.name)+'|'+norm(row.pack_size);
+
+     const dupExisting=(skuKey&&existingSku.has(skuKey))||existingNamePack.has(npKey);
+     if(dupExisting){skippedExisting++;continue}
+
+     const dupCsv=(skuKey&&seenSku.has(skuKey))||seenNamePack.has(npKey);
+     if(dupCsv){skippedCsv++;continue}
+
+     if(skuKey)seenSku.add(skuKey);
+     seenNamePack.add(npKey);
+     toInsert.push(row);
+   }
+
+   let imported=0;
+   for(let i=0;i<toInsert.length;i+=300){
+     const batch=toInsert.slice(i,i+300);
+     const r=await sb.from('products').insert(batch);
+     if(r.error)throw r.error;
+     imported+=batch.length;
+   }
+
+   await sb.rpc('log_activity',{
+     p_action:'CSV Import',
+     p_details:`Imported ${imported}; skipped existing ${skippedExisting}; skipped CSV duplicates ${skippedCsv}`
+   });
+
+   closeModal();
+   await loadCore();
+   await renderProducts();
+   toast(`CSV complete: ${imported} imported, ${skippedExisting+skippedCsv} duplicates skipped.`);
+ });
+}
+
+function productPickerHtml_(prefix, initialId=''){
+  const p=initialId?state.products.find(x=>x.id===initialId):null;
+  const label=p ? [p.name,p.pack_size,p.sku].filter(Boolean).join(' · ') : '';
+  return `<div class="productPicker">
+    <input id="${prefix}Search" class="productSearchInput" autocomplete="off"
+      placeholder="Search product name, SKU or pack size..." value="${esc(label)}">
+    <input id="${prefix}Id" type="hidden" value="${esc(initialId||'')}">
+    <button type="button" class="productPickerClear" onclick="clearProductPicker_('${prefix}')" aria-label="Clear product">×</button>
+    <div id="${prefix}Results" class="productPickerResults"></div>
+  </div>`;
+}
+function initProductPicker_(prefix,onSelect){
+  const input=$(prefix+'Search'), hidden=$(prefix+'Id'), box=$(prefix+'Results');
+  if(!input||!hidden||!box)return;
+  let active=-1;
+  const draw=()=>{
+    const q=input.value.trim().toLowerCase();
+    const matches=state.products.filter(p=>{
+      const hay=[p.name,p.sku,p.pack_size,p.category].join(' ').toLowerCase();
+      return !q || hay.includes(q);
+    }).slice(0,40);
+    active=-1;
+    box.innerHTML=matches.length?matches.map(p=>`<button type="button" class="productPickerItem" data-id="${p.id}">
+      <b>${esc(p.name)}</b>
+      <small>${esc([p.pack_size,p.sku,p.unit].filter(Boolean).join(' · ')||'No pack/SKU')}</small>
+    </button>`).join(''):'<div class="productPickerEmpty">No matching products.</div>';
+    box.classList.add('open');
+    box.querySelectorAll('.productPickerItem').forEach(btn=>btn.onclick=()=>{
+      const p=state.products.find(x=>x.id===btn.dataset.id);
+      hidden.value=p.id;
+      input.value=[p.name,p.pack_size,p.sku].filter(Boolean).join(' · ');
+      box.classList.remove('open');
+      if(onSelect)onSelect(p);
+    });
+  };
+  input.addEventListener('focus',draw);
+  input.addEventListener('input',()=>{hidden.value='';draw()});
+  input.addEventListener('keydown',e=>{
+    const items=[...box.querySelectorAll('.productPickerItem')];
+    if(e.key==='Escape'){box.classList.remove('open');return}
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();
+      if(!items.length)return;
+      active=e.key==='ArrowDown'?Math.min(active+1,items.length-1):Math.max(active-1,0);
+      items.forEach((x,i)=>x.classList.toggle('active',i===active));
+      items[active]?.scrollIntoView({block:'nearest'});
+    }else if(e.key==='Enter'&&active>=0&&items[active]){
+      e.preventDefault();items[active].click();
+    }
+  });
+  document.addEventListener('click',e=>{
+    if(!input.closest('.productPicker')?.contains(e.target))box.classList.remove('open');
+  },{once:false});
+}
+function clearProductPicker_(prefix){
+  const input=$(prefix+'Search'),hidden=$(prefix+'Id'),box=$(prefix+'Results');
+  if(input)input.value='';if(hidden)hidden.value='';if(box)box.classList.remove('open');
+  if(input){input.focus();input.dispatchEvent(new Event('input',{bubbles:true}))}
+}
+
+function openReceive(id=''){modal('Receive Delivery',`<div class="formgrid"><div class="field full"><label>Product</label>${productPickerHtml_('rProd',id)}</div><div class="field"><label>Date</label><input id="rDate" type="date" value="${isoDate(new Date())}"></div><div class="field"><label>Quantity Received</label><input id="rQty" type="number" min="0.001" step="any"></div><div class="field full"><label>Notes</label><textarea id="rNotes"></textarea></div></div><div class="notice"><b>Receiving confirms what arrived.</b> It reduces <b>On Order</b> but does not change Stock on Hand. Your physical stock is updated only by <b>Keyline Count</b>.</div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveReceive()">Confirm Received</button></div>`);setTimeout(()=>initProductPicker_('rProd'),0)}
+async function saveReceive(){if(!$('rProdId').value||n($('rQty').value)<=0)return toast('Search and select a product, then enter quantity.',true);await safe(async()=>{const r=await sb.rpc('receive_stock',{p_product_id:$('rProdId').value,p_quantity:n($('rQty').value),p_transaction_date:new Date($('rDate').value+'T12:00:00').toISOString(),p_notes:$('rNotes').value.trim()||null});if(r.error)throw r.error;closeModal();await loadCore();await renderPage();toast('Delivery confirmed. On Order reduced; Keyline stock unchanged.')})}
+function openWaste(id=''){modal('Log Waste',`<div class="formgrid"><div class="field full"><label>Product</label>${productPickerHtml_('wProd',id)}</div><div class="field"><label>Date</label><input id="wDate" type="date" value="${isoDate(new Date())}"></div><div class="field"><label>Amount</label><input id="wAmount" type="number" min="0.001" step="any"></div><div class="field"><label>Unit</label><input id="wUnit"></div><div class="field"><label>Waste Type</label><select id="wType"><option value="spoilage">Spoilage</option><option value="spill">Spill</option><option value="damaged">Damaged</option></select></div><div class="field full"><label>Notes</label><textarea id="wNotes"></textarea></div></div><div class="notice">Waste is tracked separately and does <b>not</b> reduce Current Stock.</div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="saveWaste()">Save Waste</button></div>`);setTimeout(()=>initProductPicker_('wProd',p=>{if(!$('wUnit').value)$('wUnit').value=p.unit||''}),0)}
+async function saveWaste(){if(!$('wProdId').value||n($('wAmount').value)<=0)return toast('Search and select a product, then enter waste amount.',true);await safe(async()=>{const r=await sb.rpc('log_waste',{p_product_id:$('wProdId').value,p_amount:n($('wAmount').value),p_waste_type:$('wType').value,p_unit:$('wUnit').value.trim()||null,p_waste_date:new Date($('wDate').value+'T12:00:00').toISOString(),p_notes:$('wNotes').value.trim()||null});if(r.error)throw r.error;closeModal();await loadCore();await renderPage();toast('Waste logged.')})}
+function openEditWaste(id){const w=state.waste.find(x=>x.id===id);if(!w)return toast('Waste record not found.',true);modal('Edit Waste',`<div class="formgrid"><div class="field full"><label>Product</label>${productPickerHtml_('ewProd',w.product_id)}</div><div class="field"><label>Date</label><input id="ewDate" type="date" value="${isoDate(new Date(w.waste_date))}"></div><div class="field"><label>Amount</label><input id="ewAmount" type="number" min="0.001" step="any" value="${w.amount}"></div><div class="field"><label>Unit</label><input id="ewUnit" value="${esc(w.unit||'')}"></div><div class="field"><label>Waste Type</label><select id="ewType"><option value="spoilage">Spoilage</option><option value="spill">Spill</option><option value="damaged">Damaged</option></select></div><div class="field full"><label>Notes</label><textarea id="ewNotes">${esc(w.notes||'')}</textarea></div></div><div class="notice">Editing Waste does not change physical Stock on Hand.</div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="saveEditWaste('${id}')">Save Correction</button></div>`);$('ewType').value=w.waste_type;setTimeout(()=>initProductPicker_('ewProd',p=>{if(!$('ewUnit').value)$('ewUnit').value=p.unit||''}),0)}
+async function saveEditWaste(id){if(!$('ewProdId').value||n($('ewAmount').value)<=0)return toast('Select a product and enter an amount.',true);await safe(async()=>{const r=await sb.rpc('edit_waste_log',{p_waste_id:id,p_product_id:$('ewProdId').value,p_amount:n($('ewAmount').value),p_waste_type:$('ewType').value,p_unit:$('ewUnit').value.trim()||null,p_waste_date:new Date($('ewDate').value+'T12:00:00').toISOString(),p_notes:$('ewNotes').value.trim()||null});if(r.error)throw r.error;closeModal();await loadCore();renderWaste();toast('Waste record corrected.')})}
+async function deleteWaste(id){const w=state.waste.find(x=>x.id===id);if(!confirm(`Delete this waste entry for ${productName(w?.product_id)}? This cannot be undone.`))return;await safe(async()=>{const r=await sb.rpc('delete_waste_log',{p_waste_id:id});if(r.error)throw r.error;await loadCore();renderWaste();toast('Waste entry deleted.')})}
+function openEditReceived(id){const t=state.transactions.find(x=>x.id===id&&x.transaction_type==='received');if(!t)return toast('Received record not found.',true);modal('Edit Received Item',`<div class="formgrid"><div class="field full"><label>Product</label>${productPickerHtml_('erProd',t.product_id)}</div><div class="field"><label>Date</label><input id="erDate" type="date" value="${isoDate(new Date(t.transaction_date))}"></div><div class="field"><label>Quantity Received</label><input id="erQty" type="number" min="0.001" step="any" value="${t.quantity}"></div><div class="field full"><label>Notes</label><textarea id="erNotes">${esc(t.notes||'')}</textarea></div></div><div class="notice"><b>This is a correction.</b> The difference automatically corrects On Order. Physical Stock on Hand remains unchanged because Keyline is authoritative.${t.purchase_order_id?' Product is locked to the original purchase order.':''}</div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveEditReceived('${id}')">Save Correction</button></div>`);setTimeout(()=>{initProductPicker_('erProd');if(t.purchase_order_id)$('erProdSearch').disabled=true},0)}
+async function saveEditReceived(id){if(!$('erProdId').value||n($('erQty').value)<=0)return toast('Select a product and enter a quantity.',true);await safe(async()=>{const r=await sb.rpc('edit_received_transaction',{p_transaction_id:id,p_product_id:$('erProdId').value,p_quantity:n($('erQty').value),p_transaction_date:new Date($('erDate').value+'T12:00:00').toISOString(),p_notes:$('erNotes').value.trim()||null});if(r.error)throw r.error;closeModal();await loadCore();renderReceive();toast('Received item corrected. On Order updated automatically.')})}
+async function deleteReceived(id){const t=state.transactions.find(x=>x.id===id);if(!confirm(`Delete this received entry for ${productName(t?.product_id)}? The quantity will be restored to On Order.`))return;await safe(async()=>{const r=await sb.rpc('delete_received_transaction',{p_transaction_id:id});if(r.error)throw r.error;await loadCore();renderReceive();toast('Received entry deleted and quantity restored to On Order.')})}
+async function recycleProduct(id){const p=state.products.find(x=>x.id===id);if(!confirm(`Move "${p?.name||'product'}" to Recycle Bin for 30 days?`))return;await safe(async()=>{const r=await sb.rpc('recycle_product',{p_product_id:id});if(r.error)throw r.error;await loadCore();await renderProducts();toast('Moved to Recycle Bin.')})}
+function renderKeyline(){$('main').innerHTML=`<div class="head"><div><h1>Keyline Count</h1><p>This is the official physical Stock on Hand. Receiving and Waste do not alter this count.</p></div></div><div class="card"><div class="toolbar"><input id="kSearch" class="search" placeholder="Search products..."><input id="kDate" type="date" value="${isoDate(new Date())}" style="width:auto"><input id="kNotes" placeholder="Session note" style="max-width:260px"><button class="btn primary" onclick="saveKeyline()">Finish Count</button></div><div class="tablewrap"><table><thead><tr><th>Product</th><th>Pack</th><th>Current</th><th>Counted</th><th>Difference</th></tr></thead><tbody id="kRows">${state.products.map(p=>`<tr data-search="${esc((p.name+' '+(p.sku||'')).toLowerCase())}"><td><b>${esc(p.name)}</b></td><td>${esc(p.pack_size||'—')}</td><td>${fmt(p.current_stock)} ${esc(p.unit||'')}</td><td><input class="kCount" data-id="${p.id}" data-current="${p.current_stock}" type="number" min="0" step="any" style="max-width:120px"></td><td id="kd-${p.id}">—</td></tr>`).join('')}</tbody></table></div></div>`;$('kSearch').oninput=()=>{const q=$('kSearch').value.trim().toLowerCase();[...$('kRows').rows].forEach(r=>r.classList.toggle('keylineHidden',!!q&&!r.dataset.search.includes(q)))};document.querySelectorAll('.kCount').forEach(i=>i.oninput=()=>{$('kd-'+i.dataset.id).textContent=i.value===''?'—':fmt(n(i.value)-n(i.dataset.current))})}
+async function saveKeyline(){const counts=[...document.querySelectorAll('.kCount')].filter(i=>i.value!=='').map(i=>({product_id:i.dataset.id,counted:n(i.value)}));if(!counts.length)return toast('Enter at least one count.',true);if(!confirm(`Save ${counts.length} keyline counts?`))return;await safe(async()=>{const session=await sb.rpc('create_keyline_session',{p_counted_on:$('kDate').value,p_notes:$('kNotes').value.trim()||null});if(session.error)throw session.error;for(const c of counts){const r=await sb.rpc('keyline_count',{p_product_id:c.product_id,p_counted:c.counted,p_counted_on:$('kDate').value,p_notes:$('kNotes').value.trim()||null,p_session_id:session.data});if(r.error)throw r.error}await loadCore();await renderKeyline();toast(`${counts.length} keyline counts saved.`)})}
+async function renderHistory(){const r=await sb.from('stock_transactions').select('*').eq('transaction_type','keyline_adjustment').order('transaction_date',{ascending:false}).limit(2000);if(r.error)return toast(r.error.message,true);const rows=r.data||[];$('main').innerHTML=`<div class="head"><div><h1>Keyline History</h1><p>Filter previous counts by date/product.</p></div></div><div class="card"><div class="toolbar"><input id="hStart" type="date"><input id="hEnd" type="date"><select id="hProd" style="width:auto"><option value="all">All Products</option>${state.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div><div id="hTable"></div></div>`;const draw=()=>{const s=$('hStart').value,e=$('hEnd').value,pid=$('hProd').value,f=rows.filter(x=>(!s||new Date(x.transaction_date)>=new Date(s))&&(!e||new Date(x.transaction_date)<=new Date(e+'T23:59:59'))&&(pid==='all'||x.product_id===pid));$('hTable').innerHTML=f.length?`<div class="tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Counted</th><th>Previous</th><th>Difference</th><th>Notes</th></tr></thead><tbody>${f.map(x=>`<tr><td>${dtstr(x.transaction_date)}</td><td>${esc(productName(x.product_id))}</td><td>${fmt(x.quantity)} ${esc(x.unit||'')}</td><td>${fmt(x.previous_stock)}</td><td>${fmt(x.delta)}</td><td>${esc(x.notes||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No keyline history.</div>'};['hStart','hEnd','hProd'].forEach(id=>$(id).onchange=draw);draw()}
+function renderTransactions(){$('main').innerHTML=`<div class="head"><div><h1>Transactions</h1><p>Stock movements plus Waste Log view.</p></div></div><div class="card"><div class="toolbar"><select id="tType" style="width:auto"><option value="all">All</option><option value="received">Received</option><option value="keyline_adjustment">Keyline Adjustment</option><option value="adjustment">Adjustment</option><option value="waste">Waste Log</option></select><input id="tSearch" class="search" placeholder="Search product or notes..."></div><div id="tTable"></div></div>`;const draw=()=>{const ty=$('tType').value,q=$('tSearch').value.toLowerCase();if(ty==='waste'){const rows=state.waste.filter(w=>[productName(w.product_id),w.waste_type,w.notes].join(' ').toLowerCase().includes(q));$('tTable').innerHTML=rows.length?`<div class="tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Amount</th><th>Unit</th><th>Notes</th></tr></thead><tbody>${rows.map(w=>`<tr><td>${dtstr(w.waste_date)}</td><td>${esc(productName(w.product_id))}</td><td>Waste Log · ${esc(w.waste_type)}</td><td>${fmt(w.amount)}</td><td>${esc(w.unit||'')}</td><td>${esc(w.notes||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No waste transactions.</div>';return}const rows=state.transactions.filter(t=>(ty==='all'||t.transaction_type===ty)&&[productName(t.product_id),t.notes,t.transaction_type].join(' ').toLowerCase().includes(q));$('tTable').innerHTML=rows.length?`<div class="tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Quantity</th><th>Delta</th><th>Previous</th><th>Result</th><th>Notes</th></tr></thead><tbody>${rows.map(t=>`<tr><td>${dtstr(t.transaction_date)}</td><td>${esc(productName(t.product_id))}</td><td>${esc(t.transaction_type)}</td><td>${fmt(t.quantity)} ${esc(t.unit||'')}</td><td>${fmt(t.delta)}</td><td>${fmt(t.previous_stock)}</td><td>${fmt(t.resulting_stock)}</td><td>${esc(t.notes||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No transactions.</div>'};$('tType').onchange=draw;$('tSearch').oninput=draw;draw()}
+function renderWaste(){$('main').innerHTML=`<div class="head"><div><h1>Waste</h1><p>Separate waste tracking; inventory stock is unchanged.</p></div><button class="btn danger" onclick="openWaste()">+ Log Waste</button></div><div class="card"><div class="toolbar"><input id="wSearchPage" class="search" placeholder="Search product, type, notes..."><select id="wTypePage" style="width:auto"><option value="all">All Waste</option><option value="spoilage">Spoilage</option><option value="spill">Spill</option><option value="damaged">Damaged</option></select></div><div id="wTablePage"></div></div>`;const draw=()=>{const q=$('wSearchPage').value.toLowerCase(),ty=$('wTypePage').value,rows=state.waste.filter(w=>(ty==='all'||w.waste_type===ty)&&[productName(w.product_id),w.waste_type,w.notes].join(' ').toLowerCase().includes(q));$('wTablePage').innerHTML=rows.length?`<div class="tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Amount</th><th>Unit</th><th>Notes</th><th>Action</th></tr></thead><tbody>${rows.map(w=>`<tr><td>${dtstr(w.waste_date)}</td><td>${esc(productName(w.product_id))}</td><td>${esc(w.waste_type)}</td><td>${fmt(w.amount)}</td><td>${esc(w.unit||'')}</td><td>${esc(w.notes||'')}</td><td><div class="actions"><button class="btn small" onclick="openEditWaste('${w.id}')">Edit</button><button class="btn small danger" onclick="deleteWaste('${w.id}')">Delete</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No waste records.</div>'};$('wSearchPage').oninput=draw;$('wTypePage').onchange=draw;draw()}
+function renderReceive(){
+  const today=isoDate(new Date()),open=(state.purchaseOrders||[]).filter(o=>['open','partially_received'].includes(o.status)&&n(o.quantity_ordered)>n(o.quantity_received));
+  const overdue=open.filter(o=>o.expected_arrival<today),due=open.filter(o=>o.expected_arrival===today),upcoming=open.filter(o=>o.expected_arrival>today).slice(0,30),received=state.transactions.filter(t=>t.transaction_type==='received').slice(0,50);
+  const deliveryRows=(rows,empty)=>rows.length?`<div class="tablewrap"><table><thead><tr><th>Order</th><th>Supplier</th><th>Product</th><th>Ordered</th><th>Outstanding</th><th>Expected</th><th>Action</th></tr></thead><tbody>${rows.map(o=>{const rem=n(o.quantity_ordered)-n(o.quantity_received);return `<tr><td><b>${masterOrderLabel(o.master_order_id)}</b></td><td>${esc(supplierName(o.supplier_id))}</td><td><b>${esc(productName(o.product_id))}</b></td><td>${fmt(o.quantity_ordered)}</td><td><b>${fmt(rem)}</b></td><td>${dstr(o.expected_arrival)}</td><td><div class="actions"><button class="btn small success" onclick="confirmOrderArrival('${o.id}',${rem})">Arrived in Full</button><button class="btn small" onclick="openOrderArrival('${o.id}',${rem})">Confirm Quantity</button></div></td></tr>`}).join('')}</tbody></table></div>`:`<div class="empty">${empty}</div>`;
+  $('main').innerHTML=`<div class="head"><div><h1>Receive</h1><p>See what is due, confirm full or partial deliveries, and keep Keyline as the physical stock authority.</p></div><button class="btn primary" onclick="openReceive()">+ Manual Receive</button></div>${overdue.length?`<div class="card" style="margin-bottom:12px"><h3 style="margin-top:0">Overdue</h3>${deliveryRows(overdue,'')}</div>`:''}<div class="card" style="margin-bottom:12px"><h3 style="margin-top:0">Expected Today</h3>${deliveryRows(due,'Nothing is scheduled to arrive today.')}</div><div class="card" style="margin-bottom:12px"><h3 style="margin-top:0">Upcoming</h3>${deliveryRows(upcoming,'No upcoming deliveries.')}</div><div class="card"><h3 style="margin-top:0">Recently Received</h3>${received.length?`<div class="tablewrap"><table><thead><tr><th>Date</th><th>Product</th><th>Quantity</th><th>Notes</th><th>Action</th></tr></thead><tbody>${received.map(t=>`<tr><td>${dtstr(t.transaction_date)}</td><td>${esc(productName(t.product_id))}</td><td>${fmt(t.quantity)} ${esc(t.unit||'')}</td><td>${esc(t.notes||'')}</td><td><div class="actions"><button class="btn small" onclick="openEditReceived('${t.id}')">Edit</button><button class="btn small danger" onclick="deleteReceived('${t.id}')">Delete</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No deliveries recorded yet.</div>'}</div>`;
+}
+function openOrderArrival(orderId,remaining){const o=(state.purchaseOrders||[]).find(x=>x.id===orderId);if(!o)return toast('Order not found.',true);modal('Confirm Delivery',`<div class="orderEditSummary"><div><span>Product</span><b>${esc(productName(o.product_id))}</b></div><div><span>Expected</span><b>${dstr(o.expected_arrival)}</b></div><div><span>Ordered</span><b>${fmt(o.quantity_ordered)}</b></div><div><span>Outstanding</span><b>${fmt(remaining)}</b></div></div><div class="formgrid" style="margin-top:14px"><div class="field"><label>Quantity Arrived</label><input id="arriveQty" type="number" min="0.001" max="${remaining}" step="any" value="${remaining}"></div><div class="field"><label>Arrival Date</label><input id="arriveDate" type="date" value="${isoDate(new Date())}"></div><div class="field full"><label>Notes</label><textarea id="arriveNotes"></textarea></div><div class="field full"><label>If stock remains outstanding, new expected date</label><input id="remainArrival" type="date" value="${o.expected_arrival}"></div></div><div class="notice">Receiving reduces <b>On Order</b> only. It does <b>not</b> change Stock on Hand; Keyline remains authoritative.</div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveOrderArrival('${orderId}',${remaining})">Confirm Arrived</button></div>`)}
+function confirmOrderArrival(orderId,remaining){openOrderArrival(orderId,remaining);setTimeout(()=>saveOrderArrival(orderId,remaining),0)}
+async function saveOrderArrival(orderId,remaining){const o=(state.purchaseOrders||[]).find(x=>x.id===orderId),qty=n($('arriveQty')?.value||remaining);if(!o)return toast('Order not found.',true);if(qty<=0||qty>remaining)return toast('Enter a valid received quantity.',true);await safe(async()=>{const rr=await sb.rpc('receive_purchase_order',{p_order_id:orderId,p_quantity:qty,p_transaction_date:new Date(($('arriveDate')?.value||isoDate(new Date()))+'T12:00:00').toISOString(),p_notes:$('arriveNotes')?.value.trim()||'Purchase order delivery',p_new_expected_arrival:$('remainArrival')?.value||null});if(rr.error)throw rr.error;closeModal();await loadCore();await renderReceive();toast(qty>=remaining?'Delivery received in full.':'Partial delivery saved; remainder stays On Order.')})}
+
+async function renderStockTransfer(){let r=await sb.from('stock_transfers').select('*').order('transferred_on',{ascending:false}).order('created_at',{ascending:false});if(r.error){$('main').innerHTML=`<div class="head"><div><h1>Stock Transfer</h1><p>Borrowed and given stock.</p></div></div><div class="card"><div class="empty">${esc(r.error.message)}</div></div>`;return}window.transferRows=r.data||[];$('main').innerHTML=`<div class="head"><div><h1>Stock Transfer</h1><p>Track what you borrowed, what you gave, and what has been returned.</p></div><button class="btn primary" onclick="openStockTransfer()">+ New Transfer</button></div><div class="kpirow"><div class="card metric"><div class="label">Borrowed Open</div><div class="value">${transferRows.filter(x=>x.direction==='borrowed'&&x.status!=='returned').length}</div></div><div class="card metric"><div class="label">Given Open</div><div class="value">${transferRows.filter(x=>x.direction==='gave'&&x.status!=='returned').length}</div></div><div class="card metric"><div class="label">Returned</div><div class="value">${transferRows.filter(x=>x.status==='returned').length}</div></div><div class="card metric"><div class="label">Total</div><div class="value">${transferRows.length}</div></div></div><div class="card" style="margin-top:12px"><div class="toolbar"><input id="trSearch" class="search" placeholder="Search product or whom..."><select id="trType" style="width:auto"><option value="all">Borrowed & Given</option><option value="borrowed">Borrowed</option><option value="gave">Given</option></select><select id="trStatus" style="width:auto"><option value="all">All Status</option><option value="open">Open</option><option value="partially_returned">Part Returned</option><option value="returned">Returned</option></select></div><div id="trTable"></div></div>`;const draw=()=>{let q=$('trSearch').value.toLowerCase(),ty=$('trType').value,st=$('trStatus').value,rows=transferRows.filter(x=>(ty==='all'||x.direction===ty)&&(st==='all'||x.status===st)&&[productName(x.product_id),x.counterparty,x.notes].join(' ').toLowerCase().includes(q));$('trTable').innerHTML=rows.length?`<div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Quantity</th><th>Whom / From Whom</th><th>Returned</th><th>Return Date</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows.map(x=>{let rem=n(x.quantity)-n(x.returned_quantity);return `<tr><td>${dstr(x.transferred_on)}</td><td><b>${x.direction==='borrowed'?'Borrowed':'Gave'}</b></td><td>${esc(productName(x.product_id))}</td><td>${fmt(x.quantity)} ${esc(x.unit||'')}</td><td>${esc(x.counterparty)}</td><td>${fmt(x.returned_quantity)} / ${fmt(x.quantity)}</td><td>${x.returned_on?dstr(x.returned_on):'—'}</td><td><span class="status ${x.status==='returned'?'Normal':'Low'}">${esc(x.status.replace('_',' '))}</span></td><td>${x.status!=='returned'?`<button class="btn small success" onclick="openTransferReturn('${x.id}',${rem},'${x.direction}')">${x.direction==='borrowed'?'Return':'Got Back'}</button>`:''}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">No matching transfers.</div>'};$('trSearch').oninput=draw;$('trType').onchange=draw;$('trStatus').onchange=draw;draw()}
+function openStockTransfer(){modal('New Stock Transfer',`<div class="formgrid"><div class="field"><label>Type</label><select id="stDirection"><option value="borrowed">Borrowed — we received from them</option><option value="gave">Gave — they borrowed from us</option></select></div><div class="field"><label>Date</label><input id="stDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field full"><label>Product</label>${productPickerHtml_('stProduct')}</div><div class="field"><label>How Much?</label><input id="stQty" type="number" min="0.001" step="any"></div><div class="field"><label>Whom / From Whom?</label><input id="stWho" placeholder="Person, store, branch or business"></div><div class="field full"><label>Notes</label><textarea id="stNotes"></textarea></div></div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveStockTransfer()">Save Transfer</button></div>`);setTimeout(()=>initProductPicker_('stProduct'),0)}
+async function saveStockTransfer(){let q=n($('stQty').value),who=$('stWho').value.trim();if(!$('stProductId').value)return toast('Search and select a product.',true);if(q<=0)return toast('Enter a quantity greater than zero.',true);if(!who)return toast('Enter whom / from whom.',true);await safe(async()=>{let r=await sb.rpc('create_stock_transfer',{p_product_id:$('stProductId').value,p_direction:$('stDirection').value,p_quantity:q,p_counterparty:who,p_transferred_on:$('stDate').value,p_notes:$('stNotes').value||null});if(r.error)throw r.error;closeModal();await loadCore();await renderStockTransfer();toast('Stock transfer saved.')})}
+function openTransferReturn(id,remaining,direction){modal(direction==='borrowed'?'Return Borrowed Stock':'Stock Got Back',`<div class="notice">Outstanding quantity: <b>${fmt(remaining)}</b></div><div class="formgrid"><div class="field"><label>Quantity ${direction==='borrowed'?'Returned':'Got Back'}</label><input id="srQty" type="number" min="0.001" max="${remaining}" step="any" value="${remaining}"></div><div class="field"><label>Return Date</label><input id="srDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field full"><label>Notes</label><textarea id="srNotes"></textarea></div></div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveTransferReturn('${id}',${remaining})">Save Return</button></div>`)}
+async function saveTransferReturn(id,remaining){let q=n($('srQty').value);if(q<=0||q>remaining)return toast('Enter a valid return quantity.',true);await safe(async()=>{let r=await sb.rpc('return_stock_transfer',{p_transfer_id:id,p_return_quantity:q,p_returned_on:$('srDate').value,p_notes:$('srNotes').value||null});if(r.error)throw r.error;closeModal();await loadCore();await renderStockTransfer();toast('Return recorded.')})}
+
+function renderInsights(){renderAnalytics()}
+function renderSetup(){$('main').innerHTML=`<div class="head"><div><h1>Setup</h1><p>Less frequently used configuration and audit tools.</p></div></div><div class="grid2"><div class="card"><h3>Suppliers</h3><p class="muted">Supplier contacts, order days and delivery days.</p><button class="btn primary" onclick="renderSuppliers()">Manage Suppliers</button></div><div class="card"><h3>Tags</h3><p class="muted">Primary and secondary product tags.</p><button class="btn primary" onclick="renderTags()">Manage Tags</button></div><div class="card"><h3>Activity Log</h3><p class="muted">Read-only audit history of user actions.</p><button class="btn" onclick="renderActivity()">View Activity</button></div></div>`}
+
+function renderOrdering(){
+  const all=state.products.map(p=>({p,calc:smartSuggestedOrder(p)}));
+  const rows=all.filter(x=>x.calc.qty!==null&&x.calc.qty>0);
+  const known=[...new Set(all.filter(x=>x.calc.schedule.key!=='other').map(x=>supplierName(x.p.supplier_id)))].filter(Boolean);
+  $('main').innerHTML=`<div class="head"><div><h1>Ordering</h1><p>Smart Suggested Qty uses current stock, on-order stock, recent usage, supplier delivery cycle and the active Max Hold.</p></div><div class="actions"><span class="modePill ${stockMode()==='peak'?'peak':''}">${stockModeLabel()}</span><button class="btn primary" onclick="openOrderBasket()">+ New Order</button><button class="btn" onclick="renderOrderHistory()">Order History</button></div></div>
+  <div class="orderKnowledge">
+    <div><b>Turner Price</b><span>Mon → Tue · Wed → Thu · Fri → Sat</span></div>
+    <div><b>First Choice</b><span>Daily · no Sunday / Bank Holiday deliveries · voicemail orders</span></div>
+    <div><b>Potts</b><span>Tue → Wed · Thu → Fri + following Mon</span></div>
+  </div>
+  <div class="notice"><b>${stockModeLabel()} MODE ACTIVE</b> — With usage history, Suggested Qty covers the supplier delivery window but is capped by Active Max Hold. Without enough usage/schedule data, it safely falls back to: Active Max Hold − Current Stock − On Order.</div>
+  <div class="card">${rows.length?`<div class="tablewrap"><table><thead><tr><th>Product</th><th>Supplier / Next Cycle</th><th>Stock</th><th>On Order</th><th>Usage/Day</th><th>Active Max</th><th>Suggested Qty</th><th>Why</th><th>Action</th></tr></thead><tbody>${rows.map(({p,calc:c})=>`<tr class="${p.status==='Out'?'out':p.status==='Low'?'low':''}"><td><b>${esc(p.name)}</b><div class="muted">${esc(p.pack_size||'')}</div></td><td><b>${esc(supplierName(p.supplier_id))}</b><div class="muted">${esc(c.schedule.text)}</div></td><td>${fmt(p.current_stock)} ${esc(p.unit||'')}</td><td>${fmt(p.on_order_qty)}</td><td>${fmt(c.usage)}</td><td><b>${fmt(c.target)}</b></td><td><span class="suggestQty">${fmt(c.qty)}</span> ${esc(p.unit||'')}</td><td><span class="calcMethod">${esc(c.method)}</span>${c.horizon?`<div class="muted">Cover ~${c.horizon} day${c.horizon===1?'':'s'} · target ${fmt(c.need)}</div>`:''}</td><td><div class="actions"><button class="btn small primary" onclick="openPlaceOrder('${p.id}',${c.qty})">Place Order</button><button class="btn small" onclick="openMarkOrdered('${p.id}',${p.on_order_qty})">Edit On Order</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No order is currently suggested for products with a configured ${stockModeLabel()} Max Hold.</div>'}</div>`}
+
+
+let ORDER_BASKET=[],ORDER_DRAFT_ID=null;
+function masterOrderLabel(id){const m=(state.masterOrders||[]).find(x=>x.id===id);return m?`#${String(m.order_number).padStart(3,'0')}`:'Legacy'}
+function openOrderBasket(){ORDER_BASKET=[];ORDER_DRAFT_ID=null;drawOrderBasketModal()}
+function editDraftOrder(id){const m=(state.masterOrders||[]).find(x=>x.id===id);if(!m||m.status!=='draft')return toast('Draft order not found.',true);ORDER_DRAFT_ID=id;ORDER_BASKET=(state.purchaseOrders||[]).filter(o=>o.master_order_id===id).map(o=>({product_id:o.product_id,qty:n(o.quantity_ordered),arrival:o.expected_arrival}));drawOrderBasketModal();setTimeout(()=>{if($('basketOrderDate'))$('basketOrderDate').value=m.ordered_on||isoDate(new Date());if($('basketNotes'))$('basketNotes').value=m.notes||''},0)}
+function drawOrderBasketModal(){
+  const today=isoDate(new Date());
+  modal(ORDER_DRAFT_ID?'Edit Draft Order':'Create Purchase Order',`<div class="notice"><b>${ORDER_DRAFT_ID?'Draft order — keep adding items throughout the day.':'One master order number.'}</b> Add products from Turner Price, Potts, First Choice or any supplier. Saving a draft does <b>not</b> change On Order and does not make it available for receiving.</div>
+  <div class="formgrid" style="margin-top:12px"><div class="field full"><label>Find Product</label>${productPickerHtml_('basketProd')}</div><div class="field"><label>Quantity</label><input id="basketQty" type="number" min="0.001" step="any"></div><div class="field"><label>Expected Delivery</label><input id="basketArrival" type="date"></div><div class="field full"><button class="btn primary" onclick="addBasketLine()">+ Add Item to Order</button></div></div>
+  <div id="basketLines" style="margin-top:14px"></div>
+  <div class="formgrid" style="margin-top:14px"><div class="field"><label>Order Date</label><input id="basketOrderDate" type="date" value="${today}"></div><div class="field full"><label>Order Notes</label><textarea id="basketNotes" placeholder="Optional"></textarea></div></div>
+  <div class="modalfoot"><button class="btn" onclick="closeModal()">Close</button><button class="btn" onclick="saveOrderDraft()">Save Draft</button><button class="btn primary" onclick="confirmOrderBasket()">Confirm Order</button></div>`);
+  initProductPicker_('basketProd',p=>{$('basketArrival').value=expectedArrivalFor(p,new Date())});renderBasketLines();
+}
+function renderBasketLines(){const el=$('basketLines');if(!el)return;const groups={};ORDER_BASKET.forEach((x,i)=>{const p=state.products.find(p=>p.id===x.product_id),sn=supplierName(p?.supplier_id);(groups[sn]??=[]).push({...x,i,p})});el.innerHTML=ORDER_BASKET.length?Object.entries(groups).map(([sn,rows])=>`<div class="card" style="margin-bottom:8px"><b>${esc(sn)}</b>${rows.map(x=>`<div class="listrow"><span>${esc(x.p?.name||'')} · <b>${fmt(x.qty)}</b><br><span class="muted">Delivery ${dstr(x.arrival)}</span></span><button class="btn small danger" onclick="removeBasketLine(${x.i})">Remove</button></div>`).join('')}</div>`).join(''):'<div class="empty">No items added yet.</div>'}
+function addBasketLine(){const id=$('basketProdId')?.value,qty=n($('basketQty')?.value),arrival=$('basketArrival')?.value;if(!id||qty<=0||!arrival)return toast('Select a product, quantity and delivery date.',true);ORDER_BASKET.push({product_id:id,qty,arrival});clearProductPicker_('basketProd');$('basketQty').value='';$('basketArrival').value='';renderBasketLines()}
+function removeBasketLine(i){ORDER_BASKET.splice(i,1);renderBasketLines()}
+async function persistDraftLines_(masterId,ordered){
+  const del=await sb.from('purchase_orders').delete().eq('master_order_id',masterId);if(del.error)throw del.error;
+  for(const x of ORDER_BASKET){const p=state.products.find(z=>z.id===x.product_id);const po=await sb.from('purchase_orders').insert({master_order_id:masterId,product_id:p.id,supplier_id:p.supplier_id||null,quantity_ordered:x.qty,quantity_received:0,ordered_on:ordered,expected_arrival:x.arrival,status:'draft',created_by:state.user.id}).select().single();if(po.error)throw po.error}
+}
+async function saveOrderDraft(){if(!ORDER_BASKET.length)return toast('Add at least one item.',true);const ordered=$('basketOrderDate').value;if(!ordered)return toast('Order date required.',true);await safe(async()=>{let mr;if(ORDER_DRAFT_ID){const r=await sb.from('master_orders').update({ordered_on:ordered,notes:$('basketNotes').value.trim()||null,status:'draft'}).eq('id',ORDER_DRAFT_ID).select().single();if(r.error)throw r.error;mr=r.data}else{const r=await sb.from('master_orders').insert({ordered_on:ordered,notes:$('basketNotes').value.trim()||null,status:'draft',created_by:state.user.id}).select().single();if(r.error)throw r.error;mr=r.data;ORDER_DRAFT_ID=mr.id}await persistDraftLines_(mr.id,ordered);await sb.rpc('log_activity',{p_action:'Save Order Draft',p_details:`Order #${String(mr.order_number).padStart(3,'0')} · ${ORDER_BASKET.length} item(s)`});closeModal();ORDER_BASKET=[];ORDER_DRAFT_ID=null;await loadCore();renderOrdering();toast(`Draft #${String(mr.order_number).padStart(3,'0')} saved. You can keep adding to it later.`)})}
+async function confirmOrderBasket(){if(!ORDER_BASKET.length)return toast('Add at least one item.',true);const ordered=$('basketOrderDate').value;if(!ordered)return toast('Order date required.',true);await safe(async()=>{let mr;if(ORDER_DRAFT_ID){const r=await sb.from('master_orders').update({ordered_on:ordered,notes:$('basketNotes').value.trim()||null,status:'draft'}).eq('id',ORDER_DRAFT_ID).select().single();if(r.error)throw r.error;mr=r.data;await persistDraftLines_(mr.id,ordered)}else{const r=await sb.from('master_orders').insert({ordered_on:ordered,notes:$('basketNotes').value.trim()||null,status:'draft',created_by:state.user.id}).select().single();if(r.error)throw r.error;mr=r.data;await persistDraftLines_(mr.id,ordered)}
+  const lines=(await sb.from('purchase_orders').select('*').eq('master_order_id',mr.id)).data||[];
+  for(const o of lines){const p=state.products.find(x=>x.id===o.product_id);const rr=await sb.rpc('set_on_order_qty',{p_product_id:o.product_id,p_quantity:n(p?.on_order_qty)+n(o.quantity_ordered)});if(rr.error)throw rr.error;if(p)p.on_order_qty=n(p.on_order_qty)+n(o.quantity_ordered)}
+  const up=await sb.from('purchase_orders').update({status:'open'}).eq('master_order_id',mr.id);if(up.error)throw up.error;
+  const mu=await sb.from('master_orders').update({status:'confirmed'}).eq('id',mr.id);if(mu.error)throw mu.error;
+  await sb.rpc('log_activity',{p_action:'Confirm Master Order',p_details:`Order #${String(mr.order_number).padStart(3,'0')} · ${lines.length} item(s)`});
+  closeModal();ORDER_BASKET=[];ORDER_DRAFT_ID=null;await loadCore();renderOrdering();toast(`Order #${String(mr.order_number).padStart(3,'0')} confirmed and added to On Order.`)})}
+function renderOrderHistory(){const rows=(state.masterOrders||[]);$('main').innerHTML=`<div class="head"><div><h1>Purchase Orders</h1><p>Save a draft during the day, then confirm it once you are ready to place the supplier orders.</p></div><button class="btn primary" onclick="openOrderBasket()">+ New Order</button></div><div class="card">${rows.length?rows.map(m=>{const lines=state.purchaseOrders.filter(o=>o.master_order_id===m.id),sup=[...new Set(lines.map(o=>supplierName(o.supplier_id)))],draft=m.status==='draft';return `<div class="listrow"><span><b>Order #${String(m.order_number).padStart(3,'0')}</b> ${draft?'<span class="badge">DRAFT</span>':''} · ${dstr(m.ordered_on)}<br><span class="muted">${lines.length} item(s) · ${sup.map(esc).join(', ')||'No supplier items yet'}${draft?' · Not included in On Order':''}</span></span><div class="actions">${draft?`<button class="btn small primary" onclick="editDraftOrder('${m.id}')">Continue Draft</button><button class="btn small danger" onclick="deleteMasterOrder('${m.id}')">Delete</button>`:`<button class="btn small" onclick="openMasterOrder('${m.id}')">Open</button><button class="btn small" onclick="editConfirmedMasterOrder('${m.id}')">Edit</button><button class="btn small danger" onclick="deleteMasterOrder('${m.id}')">Delete</button>`}</div></div>`}).join(''):'<div class="empty">No master orders yet.</div>'}</div>`}
+
+function editConfirmedMasterOrder(id){
+ const m=(state.masterOrders||[]).find(x=>x.id===id), lines=(state.purchaseOrders||[]).filter(o=>o.master_order_id===id);
+ if(!m)return toast('Order not found.',true);
+ const received=lines.some(o=>n(o.quantity_received)>0);
+ modal(`Edit Order #${String(m.order_number).padStart(3,'0')}`,`<div class="notice">${received?'<b>Some items have been received.</b> Received quantities are protected and cannot be removed or reduced below what has already arrived.':'Changes here automatically adjust On Order.'}</div>
+ <div class="tablewrap"><table><thead><tr><th>Product</th><th>Ordered</th><th>Received</th><th>Expected</th><th></th></tr></thead><tbody>
+ ${lines.map(o=>{const p=state.products.find(x=>x.id===o.product_id);return `<tr><td><b>${esc(p?.name||'Product')}</b><br><span class="muted">${esc(supplierName(o.supplier_id))}</span></td><td><input id="eq_${o.id}" type="number" min="${Math.max(1,n(o.quantity_received))}" step="0.01" value="${n(o.quantity_ordered)}" style="width:90px"></td><td>${n(o.quantity_received)}</td><td><input id="ed_${o.id}" type="date" value="${o.expected_arrival||''}"></td><td>${n(o.quantity_received)>0?'<span class="muted">Protected</span>':`<button class="btn small danger" onclick="removeConfirmedLine('${o.id}','${id}')">Remove</button>`}</td></tr>`}).join('')}
+ </tbody></table></div><div class="modalfoot"><button class="btn" onclick="closeModal()">Close</button><button class="btn primary" onclick="saveConfirmedOrderEdits('${id}')">Save Changes</button></div>`);
+}
+async function saveConfirmedOrderEdits(masterId){await safe(async()=>{const lines=(state.purchaseOrders||[]).filter(o=>o.master_order_id===masterId);for(const o of lines){const q=n($(`eq_${o.id}`)?.value),d=$(`ed_${o.id}`)?.value||null;if(!q)throw new Error('Every remaining item needs a quantity.');const r=await sb.rpc('update_confirmed_order_line',{p_purchase_order_id:o.id,p_quantity:q,p_expected_arrival:d});if(r.error)throw r.error}closeModal();await loadCore();renderOrderHistory();toast('Order updated. On Order has been adjusted.')})}
+async function removeConfirmedLine(lineId,masterId){if(!confirm('Remove this item from the order? Its outstanding On Order quantity will be reversed.'))return;await safe(async()=>{const r=await sb.rpc('delete_confirmed_order_line',{p_purchase_order_id:lineId});if(r.error)throw r.error;await loadCore();editConfirmedMasterOrder(masterId);toast('Item removed from order.')})}
+async function deleteMasterOrder(id){const m=(state.masterOrders||[]).find(x=>x.id===id);if(!m)return;const lines=(state.purchaseOrders||[]).filter(o=>o.master_order_id===id),received=lines.some(o=>n(o.quantity_received)>0);if(received)return toast('This order has received items, so it cannot be deleted. Edit the outstanding lines instead.',true);if(!confirm(`Delete Order #${String(m.order_number).padStart(3,'0')}?\\n\\n${m.status==='draft'?'This draft has not affected On Order.':'All outstanding quantities from this order will be removed from On Order.'}`))return;await safe(async()=>{const r=await sb.rpc('delete_master_order',{p_master_order_id:id});if(r.error)throw r.error;await loadCore();renderOrderHistory();toast(`Order #${String(m.order_number).padStart(3,'0')} deleted.`)})}
+function openMasterOrder(id){const m=state.masterOrders.find(x=>x.id===id),lines=state.purchaseOrders.filter(o=>o.master_order_id===id);if(!m)return;const groups={};lines.forEach(o=>(groups[supplierName(o.supplier_id)]??=[]).push(o));modal(`Purchase Order #${String(m.order_number).padStart(3,'0')}`,`<div class="notice"><b>Order date:</b> ${dstr(m.ordered_on)} · <b>${lines.length}</b> item(s)</div>${Object.entries(groups).map(([sn,rs])=>`<div class="card" style="margin-top:10px"><div class="listrow"><b>${esc(sn)}</b><button class="btn small" onclick="exportSupplierOrderCsv('${id}','${rs[0]?.supplier_id||''}')">Export Supplier CSV</button></div><div class="tablewrap"><table><thead><tr><th>Product</th><th>Qty</th><th>Expected Delivery</th><th>Received</th><th>Status</th></tr></thead><tbody>${rs.map(o=>`<tr><td>${esc(productName(o.product_id))}</td><td>${fmt(o.quantity_ordered)}</td><td>${dstr(o.expected_arrival)}</td><td>${fmt(o.quantity_received)}</td><td>${esc(o.status)}</td></tr>`).join('')}</tbody></table></div></div>`).join('')}<div class="modalfoot"><button class="btn" onclick="exportMasterOrderCsv('${id}')">Export Whole Order CSV</button><button class="btn" onclick="window.print()">Print / Save PDF</button><button class="btn primary" onclick="closeModal()">Close</button></div>`)}
+function csvDownload_(rows,name){if(!rows.length)return toast('No data to export.',true);const h=Object.keys(rows[0]),q=v=>`"${String(v??'').replace(/"/g,'""')}"`,csv=[h.map(q).join(','),...rows.map(r=>h.map(k=>q(r[k])).join(','))].join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function orderExportRows(id,supplierId=''){const m=state.masterOrders.find(x=>x.id===id);return state.purchaseOrders.filter(o=>o.master_order_id===id&&(!supplierId||o.supplier_id===supplierId)).map(o=>({Order:`#${String(m?.order_number||'').padStart(3,'0')}`,OrderDate:m?.ordered_on||o.ordered_on,Supplier:supplierName(o.supplier_id),Product:productName(o.product_id),QuantityOrdered:o.quantity_ordered,ExpectedDelivery:o.expected_arrival,QuantityReceived:o.quantity_received,Outstanding:Math.max(0,n(o.quantity_ordered)-n(o.quantity_received)),Status:o.status}))}
+function exportMasterOrderCsv(id){const m=state.masterOrders.find(x=>x.id===id);csvDownload_(orderExportRows(id),`order-${String(m?.order_number||'').padStart(3,'0')}.csv`)}
+function exportSupplierOrderCsv(id,supplierId){const m=state.masterOrders.find(x=>x.id===id);csvDownload_(orderExportRows(id,supplierId),`order-${String(m?.order_number||'').padStart(3,'0')}-${supplierName(supplierId).replace(/[^a-z0-9]+/gi,'-')}.csv`)}
+
+
+function openPlaceOrder(productId,suggestedQty=0){
+  const p=state.products.find(x=>x.id===productId);if(!p)return toast('Product not found.',true);
+  const today=isoDate(new Date()),arrival=expectedArrivalFor(p,new Date());
+  modal('Place Order',`<div class="orderEditSummary"><div><span>Product</span><b>${esc(p.name)}</b></div><div><span>Supplier</span><b>${esc(supplierName(p.supplier_id))}</b></div><div><span>Currently On Order</span><b>${fmt(p.on_order_qty)}</b></div><div><span>Suggested Qty</span><b>${fmt(suggestedQty)}</b></div></div><div class="formgrid" style="margin-top:14px"><div class="field"><label>Quantity Ordered</label><input id="poQty" type="number" min="0.001" step="any" value="${fmt(suggestedQty)}"></div><div class="field"><label>Order Date</label><input id="poDate" type="date" value="${today}"></div><div class="field"><label>Expected Arrival</label><input id="poArrival" type="date" value="${arrival}"></div><div class="field full"><label>Notes</label><textarea id="poNotes" placeholder="Optional"></textarea></div></div><div class="notice"><b>Expected Arrival is suggested from the supplier schedule.</b> Change it if the supplier gives you a different date. Placing this order increases On Order only — Stock on Hand remains controlled by Keyline.</div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="savePlacedOrder('${productId}')">Confirm Order Placed</button></div>`);
+}
+async function savePlacedOrder(productId){const qty=n($('poQty').value),arrival=$('poArrival').value,ordered=$('poDate').value;if(qty<=0)return toast('Enter the quantity ordered.',true);if(!arrival||!ordered)return toast('Order and expected arrival dates are required.',true);await safe(async()=>{const p=state.products.find(x=>x.id===productId);const mr=await sb.from('master_orders').insert({ordered_on:ordered,created_by:state.user.id}).select().single();if(mr.error)throw mr.error;const po=await sb.from('purchase_orders').insert({master_order_id:mr.data.id,product_id:productId,supplier_id:p?.supplier_id||null,quantity_ordered:qty,ordered_on:ordered,expected_arrival:arrival,notes:$('poNotes').value.trim()||null,created_by:state.user.id}).select().single();if(po.error)throw po.error;const rr=await sb.rpc('set_on_order_qty',{p_product_id:productId,p_quantity:n(p?.on_order_qty)+qty});if(rr.error)throw rr.error;closeModal();await loadCore();await renderOrdering();toast(`Order placed: ${fmt(qty)} · expected ${dstr(arrival)}.`)})}
+
+function openMarkOrdered(productId,suggestedQty=0){
+  const p=state.products.find(x=>x.id===productId);
+  if(!p)return toast('Product not found.',true);
+  const c=smartSuggestedOrder(p);
+  const currentOnOrder=n(p.on_order_qty);
+  const suggested=n(suggestedQty);
+  modal('Update On Order',`
+    <div class="orderEditSummary">
+      <div><span>Product</span><b>${esc(p.name)}</b></div>
+      <div><span>Current Stock</span><b>${fmt(p.current_stock)} ${esc(p.unit||'')}</b></div>
+      <div><span>Current On Order</span><b>${fmt(currentOnOrder)}</b></div>
+      <div><span>Suggested Qty</span><b>${c.qty===null?'—':fmt(c.qty)}</b></div>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label>Actual quantity on order</label>
+      <input id="orderQtyInput" type="number" min="0" step="any" value="${fmt(suggested)}" inputmode="decimal">
+      <div class="muted" style="margin-top:6px">Enter what you actually ordered. You can order more or less than the suggestion.</div>
+    </div>
+    <div class="notice"><b>This does not change Stock on Hand.</b> It only tells the system how much stock is currently coming. Receiving reduces this amount; Keyline controls physical stock.</div>
+    <div class="modalfoot">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveOnOrder('${productId}')">Save On Order</button>
+    </div>`);
+  setTimeout(()=>{const el=$('orderQtyInput');if(el){el.focus();el.select()}},50);
+}
+async function saveOnOrder(productId){
+  const el=$('orderQtyInput');
+  if(!el)return toast('On Order field not found.',true);
+  const qty=n(el.value);
+  if(qty<0)return toast('Quantity cannot be negative.',true);
+  await safe(async()=>{
+    // Save directly to the product row. This avoids relying on a missing RPC
+    // and makes the Ordering edit button work with the existing database schema.
+    const r=await sb.from('products').update({on_order_qty:qty}).eq('id',productId).select().single();
+    if(r.error)throw r.error;
+    const p=state.products.find(x=>x.id===productId);
+    await Promise.resolve(sb.rpc('log_activity',{
+      p_action:'Update On Order',
+      p_details:`${p?.name||'Product'}: ${qty} on order`
+    })).catch(()=>{});
+    closeModal();
+    await loadCore();
+    await renderOrdering();
+    toast(`On Order saved: ${fmt(qty)}.`);
+  });
+}
+
+function renderSuppliers(){$('main').innerHTML=`<div class="head"><div><h1>Suppliers</h1><p>Order and delivery schedules.</p></div><button class="btn primary" onclick="openSupplier()">+ Add Supplier</button></div><div class="card">${state.suppliers.length?`<div class="tablewrap"><table><thead><tr><th>Supplier</th><th>Contact</th><th>Phone</th><th>Email</th><th>Order Days</th><th>Delivery Days</th><th>Lead Time</th><th>Actions</th></tr></thead><tbody>${state.suppliers.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${esc(s.contact||'—')}</td><td>${esc(s.phone||'—')}</td><td>${esc(s.email||'—')}</td><td>${esc((s.order_days||[]).join(', ')||'—')}</td><td>${esc((s.delivery_days||[]).join(', ')||'—')}</td><td>${s.lead_time_days} days</td><td><button class="btn small" onclick="openSupplier('${s.id}')">Edit</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No suppliers.</div>'}</div>`}
+function openSupplier(id=''){const s=id?state.suppliers.find(x=>x.id===id):{name:'',contact:'',phone:'',email:'',order_days:[],delivery_days:[],lead_time_days:0,notes:''},days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];modal(id?'Edit Supplier':'Add Supplier',`<div class="formgrid"><div class="field"><label>Name *</label><input id="sName" value="${esc(s.name)}"></div><div class="field"><label>Contact</label><input id="sContact" value="${esc(s.contact||'')}"></div><div class="field"><label>Phone</label><input id="sPhone" value="${esc(s.phone||'')}"></div><div class="field"><label>Email</label><input id="sEmail" value="${esc(s.email||'')}"></div><div class="field"><label>Lead Time Days</label><input id="sLead" type="number" min="0" value="${s.lead_time_days||0}"></div><div class="field full"><label>Order Days</label>${days.map(d=>`<label style="display:inline-flex;gap:5px;margin:4px 9px 4px 0"><input class="sOrder" type="checkbox" value="${d}" ${(s.order_days||[]).includes(d)?'checked':''}>${d}</label>`).join('')}</div><div class="field full"><label>Delivery Days</label>${days.map(d=>`<label style="display:inline-flex;gap:5px;margin:4px 9px 4px 0"><input class="sDelivery" type="checkbox" value="${d}" ${(s.delivery_days||[]).includes(d)?'checked':''}>${d}</label>`).join('')}</div><div class="field full"><label>Notes</label><textarea id="sNotes">${esc(s.notes||'')}</textarea></div></div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveSupplier('${id}')">Save Supplier</button></div>`)}
+async function saveSupplier(id=''){const payload={name:$('sName').value.trim(),contact:$('sContact').value.trim()||null,phone:$('sPhone').value.trim()||null,email:$('sEmail').value.trim()||null,lead_time_days:n($('sLead').value),order_days:[...document.querySelectorAll('.sOrder:checked')].map(x=>x.value),delivery_days:[...document.querySelectorAll('.sDelivery:checked')].map(x=>x.value),notes:$('sNotes').value.trim()||null,active:true};if(!payload.name)return toast('Supplier name required.',true);await safe(async()=>{const r=id?await sb.from('suppliers').update(payload).eq('id',id):await sb.from('suppliers').insert(payload);if(r.error)throw r.error;await sb.rpc('log_activity',{p_action:id?'Edit Supplier':'Add Supplier',p_details:payload.name});closeModal();await loadCore();await renderSuppliers();toast('Supplier saved.')})}
+function renderTags(){$('main').innerHTML=`<div class="head"><div><h1>Tags</h1><p>Create unlimited Primary and Secondary tags.</p></div><button class="btn primary" onclick="openTag()">+ Add Tag</button></div><div class="grid2"><div class="card"><h3 style="font-size:13px;margin-top:0">Primary</h3>${state.tags.filter(t=>t.tag_type==='primary').map(t=>`<div class="listrow"><span class="tag">${esc(t.name)}</span><button class="btn small danger" onclick="archiveTag('${t.id}')">Archive</button></div>`).join('')||'<div class="empty">No primary tags.</div>'}</div><div class="card"><h3 style="font-size:13px;margin-top:0">Secondary</h3>${state.tags.filter(t=>t.tag_type==='secondary').map(t=>`<div class="listrow"><span class="tag secondary">${esc(t.name)}</span><button class="btn small danger" onclick="archiveTag('${t.id}')">Archive</button></div>`).join('')||'<div class="empty">No secondary tags.</div>'}</div></div>`}
+function openTag(){modal('Add Tag',`<div class="field"><label>Name</label><input id="tagName"></div><div class="field"><label>Type</label><select id="tagType"><option value="primary">Primary</option><option value="secondary">Secondary</option></select></div><div class="modalfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveTag()">Create Tag</button></div>`)}async function saveTag(){const name=$('tagName').value.trim();if(!name)return toast('Tag name required.',true);await safe(async()=>{const r=await sb.from('tags').insert({name,tag_type:$('tagType').value});if(r.error)throw r.error;await sb.rpc('log_activity',{p_action:'Add Tag',p_details:name});closeModal();await loadCore();await renderTags();toast('Tag created.')})}async function archiveTag(id){if(!confirm('Archive tag?'))return;await safe(async()=>{const r=await sb.from('tags').update({active:false}).eq('id',id);if(r.error)throw r.error;await loadCore();await renderTags();toast('Tag archived.')})}
+function renderAnalytics(){
+  const now=new Date(),today=isoDate(now),d7=new Date(Date.now()-7*86400000),d30=new Date(Date.now()-30*86400000);
+  const low=state.products.filter(p=>n(p.current_stock)>0&&n(p.current_stock)<=n(p.safety_stock));
+  const out=state.products.filter(p=>n(p.current_stock)<=0);
+  const onOrder=state.products.reduce((a,p)=>a+n(p.on_order_qty),0);
+  const openPO=state.purchaseOrders.filter(o=>['open','partially_received'].includes(o.status)&&n(o.quantity_ordered)-n(o.quantity_received)>0);
+  const overdue=openPO.filter(o=>o.expected_arrival<today),dueToday=openPO.filter(o=>o.expected_arrival===today),upcoming=openPO.filter(o=>o.expected_arrival>today).sort((a,b)=>a.expected_arrival.localeCompare(b.expected_arrival));
+  const waste7=state.waste.filter(w=>new Date(w.waste_date)>=d7).reduce((a,w)=>a+n(w.amount),0),waste30=state.waste.filter(w=>new Date(w.waste_date)>=d30).reduce((a,w)=>a+n(w.amount),0);
+  const movers=state.products.map(p=>({p,m:metric(p.id)})).filter(x=>n(x.m.usage_30d)>0).sort((a,b)=>n(b.m.avg_daily_usage)-n(a.m.avg_daily_usage));
+  const fast=movers.slice(0,10),max=Math.max(...fast.map(x=>n(x.m.avg_daily_usage)),1);
+  const risk=state.products.map(p=>({p,m:metric(p.id)})).filter(x=>n(x.m.avg_daily_usage)>0).map(x=>({...x,days:n(x.p.current_stock)/n(x.m.avg_daily_usage)})).sort((a,b)=>a.days-b.days).slice(0,10);
+  const wb={};state.waste.filter(w=>new Date(w.waste_date)>=d30).forEach(w=>wb[w.waste_type]=(wb[w.waste_type]||0)+n(w.amount));
+  const supplierOpen={};openPO.forEach(o=>{const k=supplierName(o.supplier_id);supplierOpen[k]=(supplierOpen[k]||0)+Math.max(0,n(o.quantity_ordered)-n(o.quantity_received))});
+  const poRows=[...overdue,...dueToday,...upcoming.slice(0,8)];
+  $('main').innerHTML=`<div class="head"><div><h1>Insights</h1><p>Operational picture from Keyline counts, usage, waste and orders.</p></div><div class="actions"><button class="btn primary" onclick="renderAnalytics()">Overview</button><button class="btn" onclick="renderTransactions()">Transactions</button><button class="btn" onclick="renderReports()">Reports & Exports</button><button class="btn" onclick="renderHistory()">Keyline History</button></div></div>
+  <div class="metrics">
+    <div class="metric"><span>Stock Health</span><b>${out.length+low.length}</b><small>${out.length} out · ${low.length} low</small></div>
+    <div class="metric"><span>On Order</span><b>${fmt(onOrder)}</b><small>${openPO.length} open order${openPO.length===1?'':'s'}</small></div>
+    <div class="metric"><span>Arriving Today</span><b>${dueToday.length}</b><small>${overdue.length} overdue</small></div>
+    <div class="metric"><span>Waste · 7 Days</span><b>${fmt(waste7)}</b><small>${fmt(waste30)} in 30 days</small></div>
+  </div>
+  ${(out.length||low.length)?`<div class="notice" style="margin-bottom:12px"><b>Attention:</b> ${out.length?`${out.length} product${out.length===1?' is':'s are'} out of stock`:''}${out.length&&low.length?' · ':''}${low.length?`${low.length} product${low.length===1?' is':'s are'} at/below Safety Stock`:''}.</div>`:''}
+  <div class="grid2">
+    <div class="card"><h3 style="font-size:13px;margin-top:0">Stock Risk · Lowest Days Cover</h3>${risk.length?risk.map(x=>`<div class="listrow"><span><b>${esc(x.p.name)}</b><small class="muted" style="display:block">${fmt(x.p.current_stock)} on hand · ${fmt(x.m.avg_daily_usage)}/day</small></span><b>${x.days<99?fmt(x.days)+' d':'—'}</b></div>`).join(''):'<div class="empty">Not enough Keyline usage history yet.</div>'}</div>
+    <div class="card"><h3 style="font-size:13px;margin-top:0">Fast Movers · Usage / Day</h3>${fast.length?fast.map(x=>`<div class="barrow"><div>${esc(x.p.name)}</div><div class="bartrack"><div class="barfill" style="width:${Math.max(2,n(x.m.avg_daily_usage)/max*100)}%"></div></div><div>${fmt(x.m.avg_daily_usage)}</div></div>`).join(''):'<div class="empty">Not enough usage history yet.</div>'}</div>
+    <div class="card"><h3 style="font-size:13px;margin-top:0">Deliveries · Overdue / Today / Upcoming</h3>${poRows.length?`<div class="tablewrap"><table><thead><tr><th>Arrival</th><th>Product</th><th>Supplier</th><th>Outstanding</th></tr></thead><tbody>${poRows.map(o=>{const rem=Math.max(0,n(o.quantity_ordered)-n(o.quantity_received)),label=o.expected_arrival<today?'Overdue':o.expected_arrival===today?'Today':dstr(o.expected_arrival);return `<tr class="${o.expected_arrival<today?'out':o.expected_arrival===today?'low':''}"><td><b>${label}</b></td><td>${esc(productName(o.product_id))}</td><td>${esc(supplierName(o.supplier_id))}</td><td>${fmt(rem)}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">No outstanding deliveries.</div>'}</div>
+    <div class="card"><h3 style="font-size:13px;margin-top:0">Outstanding Orders by Supplier</h3>${Object.keys(supplierOpen).length?Object.entries(supplierOpen).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="listrow"><span>${esc(k)}</span><b>${fmt(v)}</b></div>`).join(''):'<div class="empty">Nothing currently on order.</div>'}</div>
+    <div class="card"><h3 style="font-size:13px;margin-top:0">Waste by Type · 30 Days</h3>${Object.entries(wb).length?Object.entries(wb).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="listrow"><span>${esc(k)}</span><b>${fmt(v)}</b></div>`).join(''):'<div class="empty">No waste logged in the last 30 days.</div>'}</div>
+    <div class="card"><h3 style="font-size:13px;margin-top:0">Stock Status</h3><div class="listrow"><span>Normal</span><b>${state.products.length-out.length-low.length}</b></div><div class="listrow"><span>Low</span><b>${low.length}</b></div><div class="listrow"><span>Out</span><b>${out.length}</b></div><div class="listrow"><span>Total Products</span><b>${state.products.length}</b></div></div>
+  </div>`
+}
+function renderReports(){$('main').innerHTML=`<div class="head"><div><h1>Reports</h1><p>Export filtered data as CSV or print to PDF.</p></div></div><div class="card"><div class="formgrid"><div class="field"><label>Report</label><select id="repType"><option value="inventory">Inventory Snapshot</option><option value="transactions">Transactions</option><option value="waste">Waste Report</option><option value="orders">Purchase Orders</option><option value="receiving">Receiving Report</option></select></div><div class="field"><label>Product</label><select id="repProduct"><option value="all">All Products</option>${state.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div><div class="field"><label>Supplier</label><select id="repSupplier"><option value="all">All Suppliers</option>${state.suppliers.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div><div class="field"><label>Start Date</label><input id="repStart" type="date"></div><div class="field"><label>End Date</label><input id="repEnd" type="date"></div></div><div class="actions"><button class="btn primary" onclick="exportReportCsv()">Export CSV</button><button class="btn" onclick="printReport()">Print / Save PDF</button></div></div><div id="repPreview" style="margin-top:12px"></div>`;renderReportPreview();['repType','repProduct','repSupplier','repStart','repEnd'].forEach(id=>$(id).onchange=renderReportPreview)}
+function reportRows(){const ty=$('repType').value,pid=$('repProduct').value,sid=$('repSupplier')?.value||'all',s=$('repStart').value,e=$('repEnd').value;if(ty==='inventory')return state.products.filter(p=>(pid==='all'||p.id===pid)&&(sid==='all'||p.supplier_id===sid)).map(p=>{const m=metric(p.id);return{Product:p.name,SKU:p.sku||'',PackSize:p.pack_size||'',Stock:p.current_stock,Unit:p.unit||'',SafetyStock:p.safety_stock,OffPeakMax:p.off_peak_max_hold??'',PeakMax:p.peak_max_hold??'',OnOrder:p.on_order_qty,UsagePerDay:m.avg_daily_usage??0,Status:p.status,Supplier:supplierName(p.supplier_id)}});if(ty==='transactions')return state.transactions.filter(t=>(pid==='all'||t.product_id===pid)&&(!s||new Date(t.transaction_date)>=new Date(s))&&(!e||new Date(t.transaction_date)<=new Date(e+'T23:59:59'))).map(t=>({Date:dtstr(t.transaction_date),Product:productName(t.product_id),Type:t.transaction_type,Quantity:t.quantity,Unit:t.unit||'',Delta:t.delta,Previous:t.previous_stock,Result:t.resulting_stock,Notes:t.notes||''}));if(ty==='waste')return state.waste.filter(w=>(pid==='all'||w.product_id===pid)&&(!s||new Date(w.waste_date)>=new Date(s))&&(!e||new Date(w.waste_date)<=new Date(e+'T23:59:59'))).map(w=>({Date:dtstr(w.waste_date),Product:productName(w.product_id),Type:w.waste_type,Amount:w.amount,Unit:w.unit||'',Notes:w.notes||''}));if(ty==='orders')return state.purchaseOrders.filter(o=>o.status!=='draft'&&(pid==='all'||o.product_id===pid)&&(sid==='all'||o.supplier_id===sid)&&(!s||o.ordered_on>=s)&&(!e||o.ordered_on<=e)).map(o=>({Order:masterOrderLabel(o.master_order_id),OrderDate:o.ordered_on,Supplier:supplierName(o.supplier_id),Product:productName(o.product_id),Ordered:o.quantity_ordered,ExpectedDelivery:o.expected_arrival,Received:o.quantity_received,Outstanding:Math.max(0,n(o.quantity_ordered)-n(o.quantity_received)),Status:o.status}));return state.transactions.filter(t=>t.transaction_type==='received'&&(pid==='all'||t.product_id===pid)&&(!s||new Date(t.transaction_date)>=new Date(s))&&(!e||new Date(t.transaction_date)<=new Date(e+'T23:59:59'))).filter(t=>{const o=state.purchaseOrders.find(o=>o.id===t.purchase_order_id);return sid==='all'||o?.supplier_id===sid}).map(t=>{const o=state.purchaseOrders.find(o=>o.id===t.purchase_order_id);return{ReceivingDate:dtstr(t.transaction_date),Order:o?masterOrderLabel(o.master_order_id):'Manual',Supplier:o?supplierName(o.supplier_id):'',Product:productName(t.product_id),Quantity:t.quantity,Unit:t.unit||'',ExpectedDelivery:o?.expected_arrival||'',Notes:t.notes||''}})}
+function renderReportPreview(){if(!$('repPreview'))return;const rows=reportRows();$('repPreview').innerHTML=`<div class="card"><h3 style="font-size:13px;margin-top:0">Preview · ${rows.length} rows</h3>${rows.length?`<div class="tablewrap"><table><thead><tr>${Object.keys(rows[0]).map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,100).map(r=>`<tr>${Object.values(r).map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<div class="empty">No rows.</div>'}</div>`}function exportReportCsv(){const rows=reportRows();if(!rows.length)return toast('No data to export.',true);const headers=Object.keys(rows[0]),q=v=>`"${String(v??'').replace(/"/g,'""')}"`,csv=[headers.map(q).join(','),...rows.map(r=>headers.map(h=>q(r[h])).join(','))].join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`inventory-${$('repType').value}-${isoDate(new Date())}.csv`;a.click();URL.revokeObjectURL(a.href)}function printReport(){renderReportPreview();window.print()}
+function renderActivity(){$('main').innerHTML=`<div class="head"><div><h1>Activity</h1><p>Read-only audit log.</p></div></div><div class="card">${state.activity.length?`<div class="tablewrap"><table><thead><tr><th>Time</th><th>Action</th><th>Details</th></tr></thead><tbody>${state.activity.map(a=>`<tr><td>${dtstr(a.occurred_at)}</td><td><b>${esc(a.action)}</b></td><td>${esc(a.details||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No activity yet.</div>'}</div>`}
+function renderRecycle(){$('main').innerHTML=`<div class="head"><div><h1>Recycle Bin</h1><p>Deleted products remain restorable for 30 days.</p></div></div><div class="card">${state.recycle.length?`<div class="tablewrap"><table><thead><tr><th>Deleted</th><th>Product</th><th>Expires</th><th>Actions</th></tr></thead><tbody>${state.recycle.map(r=>`<tr><td>${dtstr(r.deleted_at)}</td><td><b>${esc(r.product_snapshot?.name||r.product_id)}</b></td><td>${dtstr(r.expires_at)}</td><td><div class="actions"><button class="btn small success" onclick="restoreProduct('${r.product_id}')">Restore</button><button class="btn small danger" onclick="permanentDelete('${r.product_id}')">Delete Now</button></div></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Recycle Bin is empty.</div>'}</div>`}async function restoreProduct(id){await safe(async()=>{const r=await sb.rpc('restore_product',{p_product_id:id});if(r.error)throw r.error;await loadCore();await renderRecycle();toast('Product restored.')})}async function permanentDelete(id){if(!confirm('Delete now? Historical audit records will remain.'))return;await safe(async()=>{const r=await sb.rpc('permanent_delete_recycled',{p_product_id:id});if(r.error)throw r.error;await loadCore();await renderRecycle();toast('Recycle entry removed; audit history retained.')})}
+(async()=>{const hash=new URLSearchParams(location.hash.replace(/^#/,''));const looksRecovery=hash.get('type')==='recovery';const {data:{session}}=await sb.auth.getSession();if(looksRecovery&&session)showPasswordReset();else if(session)await // Stable boot: restore a saved session once. Login/logout own their UI transitions.
+startApp();
+})();
+// MASTER ORDER V12.4
+</script>
+
+<script id="keyline-mobile-search-fix">
+(function(){
+ function isKeylineContext(el){
+   if(!el) return false;
+   var ph=(el.getAttribute('placeholder')||'').toLowerCase();
+   var id=(el.id||'').toLowerCase(), cls=(el.className||'').toString().toLowerCase();
+   var page=el.closest('#keylinePage,#keyline,[data-page="keyline"],.keyline-page');
+   return !!page || id.indexOf('keyline')>-1 || cls.indexOf('keyline')>-1 ||
+          (ph.indexOf('search')>-1 && ph.indexOf('product')>-1 &&
+           document.querySelector('#keylinePage,#keyline,[data-page="keyline"],.keyline-page'));
+ }
+ function filterKeyline(input){
+   var q=(input.value||'').trim().toLowerCase();
+   var root=input.closest('#keylinePage,#keyline,[data-page="keyline"],.keyline-page') || document;
+   var rows=root.querySelectorAll('tbody tr');
+   if(!rows.length) return;
+   rows.forEach(function(row){
+     var txt=(row.textContent||'').toLowerCase();
+     row.style.display=(!q || txt.indexOf(q)>-1)?'':'none';
+   });
+ }
+ document.addEventListener('input',function(e){
+   var el=e.target;
+   if(el && (el.tagName==='INPUT') && isKeylineContext(el)) filterKeyline(el);
+ },true);
+ document.addEventListener('search',function(e){
+   if(isKeylineContext(e.target)) filterKeyline(e.target);
+ },true);
+})();
+</script>
+
+
+<script id="hotfix-mobile-v5-js">
+(function(){
+  function isMobile(){return window.matchMedia('(max-width:760px)').matches}
+
+  function cardify(){
+    if(!isMobile()) return;
+    document.querySelectorAll('table').forEach(function(t){
+      t.classList.add('mobileV5');
+      var heads=Array.from(t.querySelectorAll('thead th')).map(function(h){return (h.textContent||'').trim()});
+      t.querySelectorAll('tbody tr').forEach(function(row){
+        Array.from(row.children).forEach(function(td,i){
+          if(td.tagName==='TD') td.setAttribute('data-mobile-label',heads[i]||'');
+        });
+      });
+    });
+  }
+
+  function fixKeylineSearch(){
+    var s=document.getElementById('kSearch'), body=document.getElementById('kRows');
+    if(!s||!body)return;
+    var apply=function(){
+      var q=(s.value||'').trim().toLowerCase();
+      Array.from(body.rows||[]).forEach(function(row){
+        var hay=(row.dataset.search||row.textContent||'').toLowerCase();
+        row.classList.toggle('keylineHidden',!!q&&hay.indexOf(q)===-1);
+      });
+    };
+    if(!s.dataset.mobileV5Bound){
+      s.addEventListener('input',apply,true);
+      s.addEventListener('search',apply,true);
+      s.dataset.mobileV5Bound='1';
+    }
+    apply();
+  }
+
+  function enhance(){cardify();fixKeylineSearch();}
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhance);else enhance();
+
+  var timer;
+  new MutationObserver(function(){
+    clearTimeout(timer);
+    timer=setTimeout(enhance,80);
+  }).observe(document.body,{childList:true,subtree:true});
+
+  window.addEventListener('resize',enhance);
+})();
+</script>
+
+<!-- MASTER ORDER DRAFTS V12.6 -->
+<!-- SAFE MASTER ORDER EDIT DELETE V12.7 -->
+</body></html>
